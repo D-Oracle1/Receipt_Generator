@@ -3,49 +3,62 @@
 @tailwind utilities;
 
 @layer base {
+  @keyframes bounce-gentle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --background: 260 100% 97.3%;
+    --foreground: 260 30% 10%;
+    --card: 260 100% 100%;
+    --card-foreground: 260 30% 10%;
+    --popover: 260 100% 100%;
+    --popover-foreground: 260 30% 10%;
+    --primary: 270 100% 65%;
+    --primary-foreground: 260 100% 100%;
+    --secondary: 280 90% 60%;
+    --secondary-foreground: 260 100% 100%;
+    --muted: 260 20% 85%;
+    --muted-foreground: 260 15% 40%;
+    --accent: 290 95% 65%;
+    --accent-foreground: 260 100% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --border: 260 80% 90%;
+    --input: 260 80% 90%;
+    --ring: 270 100% 65%;
+    --radius: 0.75rem;
+    --glass-opacity: 0.7;
+    --glass-blur: 8px;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 260 40% 8%;
+    --foreground: 260 100% 95%;
+    --card: 260 50% 12%;
+    --card-foreground: 260 100% 95%;
+    --popover: 260 50% 12%;
+    --popover-foreground: 260 100% 95%;
+    --primary: 280 100% 68%;
+    --primary-foreground: 260 40% 8%;
+    --secondary: 270 90% 65%;
+    --secondary-foreground: 260 40% 8%;
+    --muted: 260 30% 35%;
+    --muted-foreground: 260 20% 70%;
+    --accent: 290 95% 68%;
+    --accent-foreground: 260 40% 8%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 260 50% 25%;
+    --input: 260 50% 25%;
+    --ring: 280 100% 68%;
+    --glass-opacity: 0.8;
+    --glass-blur: 12px;
   }
 }
 
@@ -55,5 +68,43 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply relative backdrop-blur-md bg-white/70 border border-white/30 rounded-2xl shadow-2xl transition-all duration-300;
+  }
+
+  .glass:hover {
+    @apply border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4),0_0_40px_rgba(168,85,247,0.2)] animate-[bounce-gentle_0.6s_ease-in-out];
+  }
+
+  .glass-dark {
+    @apply relative backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl shadow-2xl transition-all duration-300;
+  }
+
+  .glass-dark:hover {
+    @apply border-purple-400/70 shadow-[0_0_20px_rgba(168,85,247,0.5),0_0_40px_rgba(168,85,247,0.3)] animate-[bounce-gentle_0.6s_ease-in-out];
+  }
+
+  .glass-card {
+    @apply glass dark:glass-dark;
+  }
+
+  .glass-button {
+    @apply glass dark:glass-dark px-6 py-3 font-medium transition-all duration-300 hover:bg-white/80 dark:hover:bg-white/15 active:scale-95;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-300/40;
+  }
+
+  .gradient-lavender {
+    @apply bg-gradient-to-br from-purple-200 via-pink-100 to-purple-100;
+  }
+
+  .gradient-lavender-dark {
+    @apply bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950;
   }
 }
