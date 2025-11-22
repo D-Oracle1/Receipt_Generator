@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(dir \"D:\\Websites\\Receipt\\Receipt_Generator\\public\")",
+      "Bash(git reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nchore: Add Vercel deployment configuration and guide\n\n- Create vercel.json with build settings and environment variable mappings\n- Add 60-second timeout for API functions to handle receipt generation\n- Create comprehensive VERCEL_DEPLOYMENT.md guide with step-by-step instructions\n- Document environment variable setup for Supabase, Anthropic, and Stripe\n- Include troubleshooting, monitoring, and rollback procedures\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(vercel link:*)",
+      "Bash(vercel deploy:*)",
+      "Bash(vercel secrets:*)",
+      "Bash(cat:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

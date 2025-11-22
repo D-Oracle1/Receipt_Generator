@@ -1,0 +1,27 @@
+{
+  "name": "Receipt Generator - AI-Powered Receipt Creation",
+  "short_name": "Receipt Gen",
+  "description": "Create professional receipts with AI-powered layout extraction. Generate PDF and PNG receipts instantly with custom branding.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#b84db8",
+  "categories": ["productivity", "business"],
+  "shortcuts": [
+    {
+      "name": "Create Receipt",
+      "short_name": "New Receipt",
+      "description": "Create a new receipt",
+      "url": "/generator"
+    },
+    {
+      "name": "View Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your receipts and statistics",
+      "url": "/dashboard"
+    }
+  ],
+  "prefer_related_applications": false
+}
