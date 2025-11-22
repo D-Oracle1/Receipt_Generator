@@ -1,22 +1,9 @@
 {
   "version": 2,
-  "projectSettings": {
-    "framework": "nextjs",
-    "nodeVersion": "18.x"
-  },
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install --legacy-peer-deps",
   "outputDirectory": ".next",
-  "rootDirectory": ".",
-
-  "buildEnvironment": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "NEXT_PUBLIC_APP_URL": "@next_public_app_url",
-    "ANTHROPIC_API_KEY": "@anthropic_api_key"
-  },
 
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
@@ -30,26 +17,8 @@
     "NODE_ENV": "production"
   },
 
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "claude": true
-    },
-    "deploymentBranches": [
-      "main",
-      "claude/ai-receipt-generator-*"
-    ]
-  },
-
   "functions": {
     "api/**/*.ts": {
-      "maxDuration": 60
-    },
-    "api/**/generate.ts": {
-      "maxDuration": 60,
-      "memory": 1024
-    },
-    "api/**/extract-layout.ts": {
       "maxDuration": 60,
       "memory": 1024
     }
@@ -106,13 +75,6 @@
       "source": "/admin",
       "destination": "/admin/setup",
       "permanent": true
-    }
-  ],
-
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
     }
   ]
 }
