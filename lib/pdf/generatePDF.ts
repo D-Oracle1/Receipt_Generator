@@ -1,4 +1,3 @@
-import puppeteer from 'puppeteer'
 import { ReceiptLayout } from '../ai/extractLayout'
 
 export interface BusinessInfo {
@@ -230,69 +229,33 @@ function generateReceiptHTML(
   `.trim()
 }
 
+// Note: PDF generation on the server requires a PDF library
+// For client-side PDF download, use jsPDF with HTML2Canvas
+// For now, return HTML that can be printed or converted on the client
 export async function generatePDF(
   layout: ReceiptLayout,
   data: ReceiptData
 ): Promise<Buffer> {
   const html = generateReceiptHTML(layout, data)
-
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  })
-
-  try {
-    const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-
-    const pdf = await page.pdf({
-      width: `${layout.page.width}px`,
-      printBackground: true,
-      margin: {
-        top: '0',
-        right: '0',
-        bottom: '0',
-        left: '0',
-      },
-    })
-
-    return Buffer.from(pdf)
-  } finally {
-    await browser.close()
-  }
+  // Return the HTML as a buffer
+  // Client will use jsPDF to convert this to PDF
+  return Buffer.from(html, 'utf-8')
 }
 
+// Generate PNG is client-side only, return HTML
 export async function generatePNG(
   layout: ReceiptLayout,
   data: ReceiptData
 ): Promise<Buffer> {
   const html = generateReceiptHTML(layout, data)
+  // Client-side conversion required
+  return Buffer.from(html, 'utf-8')
+}
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  })
-
-  try {
-    const page = await browser.newPage()
-    await page.setViewport({
-      width: layout.page.width,
-      height: 1000,
-    })
-
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-
-    const element = await page.$('body')
-    if (!element) {
-      throw new Error('Failed to find body element')
-    }
-
-    const screenshot = await element.screenshot({
-      type: 'png',
-    })
-
-    return Buffer.from(screenshot)
-  } finally {
-    await browser.close()
-  }
+// Export HTML generation for client-side use
+export function generateReceiptHTMLString(
+  layout: ReceiptLayout,
+  data: ReceiptData
+): string {
+  return generateReceiptHTML(layout, data)
 }
