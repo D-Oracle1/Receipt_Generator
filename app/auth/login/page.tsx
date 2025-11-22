@@ -112,7 +112,9 @@ export default function LoginPage() {
               {isSignUp ? 'Create Account' : 'Welcome back!'}
             </h1>
             <p className="text-sm text-white/70 leading-relaxed">
-              Sign in to access your guided meditations, daily practices, and personal journey
+              {isSignUp
+                ? 'Create an account to start generating smart receipts with AI'
+                : 'Sign in to manage your receipts and expenses'}
             </p>
           </div>
 
