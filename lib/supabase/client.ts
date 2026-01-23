@@ -1,18 +1,49 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-export const supabase = createClientComponentClient()
+// Lazy initialization to ensure environment variables are available at runtime
+let _supabase: ReturnType<typeof createClientComponentClient> | null = null
+let _supabaseAdmin: SupabaseClient | null = null
 
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+export const getSupabase = () => {
+  if (!_supabase) {
+    _supabase = createClientComponentClient()
   }
-)
+  return _supabase
+}
+
+// For backwards compatibility - lazy getter
+export const supabase = new Proxy({} as ReturnType<typeof createClientComponentClient>, {
+  get(_, prop) {
+    return (getSupabase() as any)[prop]
+  }
+})
+
+export const getSupabaseAdmin = () => {
+  if (!_supabaseAdmin) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!url || !key) {
+      throw new Error('Missing Supabase environment variables for admin client')
+    }
+
+    _supabaseAdmin = createClient(url, key, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  }
+  return _supabaseAdmin
+}
+
+// For backwards compatibility
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    return (getSupabaseAdmin() as any)[prop]
+  }
+})
 
 export type Database = {
   public: {
