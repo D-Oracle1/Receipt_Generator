@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { extractLayoutFromImage } from '@/lib/ai/extractLayout'
 import { createServerClient } from '@/lib/supabase/server'
 
+// Increase timeout for AI processing
+export const maxDuration = 60
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient()

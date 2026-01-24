@@ -12,6 +12,54 @@ import { useToast } from '@/components/ui/use-toast'
 import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2 } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 
+// Compress image to reduce file size for upload
+async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    img.onload = () => {
+      let { width, height } = img
+
+      // Calculate new dimensions while maintaining aspect ratio
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width
+        width = maxWidth
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'))
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Could not compress image'))
+            return
+          }
+          const compressedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          })
+          resolve(compressedFile)
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+
+    img.onerror = () => reject(new Error('Could not load image'))
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 export default function GeneratorPage() {
   const {
     layout,
@@ -47,10 +95,14 @@ export default function GeneratorPage() {
     if (!file) return
 
     setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
 
     try {
+      // Compress image before uploading to avoid 413 error
+      const compressedFile = await compressImage(file, 1200, 0.7)
+
+      const formData = new FormData()
+      formData.append('file', compressedFile)
+
       const response = await fetch('/api/extract-layout', {
         method: 'POST',
         body: formData,
