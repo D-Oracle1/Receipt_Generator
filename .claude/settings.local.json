@@ -28,7 +28,11 @@
       "Bash(npx vercel --prod --yes)",
       "Bash(tee:*)",
       "Bash(printf:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dir /s /b \"d:\\\\Websites\\\\Receipt\\\\Receipt_Generator\\\\app\")",
+      "Bash(dir:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []
