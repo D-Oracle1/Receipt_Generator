@@ -57,10 +57,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [theme, mounted])
 
-  if (!mounted) {
-    return <>{children}</>
-  }
-
   return (
     <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
       {children}
@@ -70,8 +66,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext)
+
+  // Return default values if context is not available (during SSR/prerendering)
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider')
+    return {
+      theme: 'system' as Theme,
+      setTheme: () => {},
+      resolvedTheme: 'dark' as const,
+    }
   }
+
   return context
 }
