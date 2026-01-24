@@ -1,3 +1,4 @@
+import { createBrowserClient } from '@supabase/ssr'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // Environment variables - these MUST be set in Vercel
@@ -120,11 +121,11 @@ export type Database = {
   }
 }
 
-// Lazy initialization for browser client
-let _supabase: SupabaseClient<Database> | null = null
+// Lazy initialization for browser client using @supabase/ssr
+let _supabase: ReturnType<typeof createBrowserClient<Database>> | null = null
 let _supabaseAdmin: SupabaseClient<Database> | null = null
 
-export const getSupabase = (): SupabaseClient<Database> => {
+export const getSupabase = () => {
   if (!_supabase) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       console.error('Missing Supabase environment variables:', {
@@ -134,19 +135,13 @@ export const getSupabase = (): SupabaseClient<Database> => {
       throw new Error('Supabase configuration error. Please check environment variables.')
     }
 
-    _supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    })
+    _supabase = createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
   }
   return _supabase
 }
 
 // For backwards compatibility - lazy getter
-export const supabase = new Proxy({} as SupabaseClient<Database>, {
+export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Database>>, {
   get(_, prop) {
     return (getSupabase() as any)[prop]
   }
