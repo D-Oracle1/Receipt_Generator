@@ -15,11 +15,9 @@ import {
   Zap,
   Clock,
   CheckCircle,
-  XCircle,
   MoreVertical,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
-import LavenderBackground from '@/components/LavenderBackground'
 import Sidebar from '@/components/dashboard/Sidebar'
 import StatCard from '@/components/dashboard/StatCard'
 import DonutChart from '@/components/dashboard/DonutChart'
@@ -154,8 +152,6 @@ export default function DashboardPage() {
   }
 
   // Credits usage percentage
-  const maxCredits = user?.credits === 999999 ? 999999 : 100
-  const usedCredits = user?.credits === 999999 ? 0 : (100 - (user?.credits || 0))
   const creditsPercentage = user?.credits === 999999 ? 100 : Math.round((user?.credits || 0))
 
   // Get greeting based on time
@@ -170,255 +166,251 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <LavenderBackground variant="dark">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="h-12 w-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white/70">Loading...</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
-      </LavenderBackground>
+      </div>
     )
   }
 
   return (
-    <LavenderBackground variant="dark">
-      <div className="min-h-screen flex">
-        {/* Sidebar */}
-        <Sidebar onSignOut={handleSignOut} userEmail={user?.email} isAdmin={user?.is_admin} />
+    <div className="min-h-screen bg-background">
+      {/* Sidebar */}
+      <Sidebar onSignOut={handleSignOut} userEmail={user?.email} isAdmin={user?.is_admin} />
 
-        {/* Main Content */}
-        <main className="flex-1 ml-20 p-6 overflow-auto">
-          {/* Header */}
-          <header className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-white">
-                {getGreeting()}, {userName.charAt(0).toUpperCase() + userName.slice(1)}
-              </h1>
-              <p className="text-white/60 mt-1">Your weekly financial update</p>
-            </div>
+      {/* Main Content */}
+      <main className="md:ml-20 p-4 md:p-6 pt-20 md:pt-6 overflow-auto">
+        {/* Header */}
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              {getGreeting()}, {userName.charAt(0).toUpperCase() + userName.slice(1)}
+            </h1>
+            <p className="text-muted-foreground mt-1">Your weekly financial update</p>
+          </div>
 
-            <div className="flex items-center gap-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                <input
-                  type="text"
-                  placeholder="Search here"
-                  className="search-input pl-10 w-64"
-                />
-              </div>
-
-              {/* Notifications */}
-              <button className="p-3 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors">
-                <Bell className="h-5 w-5 text-white/70" />
-              </button>
-
-              {/* User Avatar */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold shadow-lg">
-                  {userName.charAt(0).toUpperCase()}
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Bills Section */}
-          <section className="dashboard-section">
-            <h2 className="dashboard-section-title">Receipts</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
-                title="Total Receipts"
-                value={receipts.length}
-                change={percentChange}
-                changeLabel={lastMonthReceipts.toString()}
-              />
-              <StatCard
-                title="This Month"
-                value={thisMonthReceipts}
-                change={percentChange > 0 ? percentChange : undefined}
-              />
-              <StatCard
-                title="Downloaded"
-                value={receipts.filter(r => r.pdf_url || r.png_url).length}
-              />
-              <StatCard
-                title="Credits Left"
-                value={user?.credits === 999999 ? '∞' : user?.credits || 0}
-                icon={<Zap className="h-4 w-4 text-yellow-400" />}
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            {/* Search */}
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search here"
+                className="w-full sm:w-64 pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
             </div>
-          </section>
 
-          {/* Invoices Section */}
-          <section className="dashboard-section">
-            <h2 className="dashboard-section-title">Overview</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              {/* Donut Chart */}
-              <div className="lg:col-span-4 glass-panel p-6">
-                <DonutChart
-                  percentage={creditsPercentage}
-                  label="Credits Available"
-                  value={user?.credits === 999999 ? 'Unlimited' : `${user?.credits || 0} credits`}
-                  subValue={user?.credits === 999999 ? 'Pro subscription active' : 'Upgrade for more'}
-                />
-              </div>
+            {/* Notifications */}
+            <button className="p-3 rounded-xl bg-card border border-border hover:bg-muted transition-colors">
+              <Bell className="h-5 w-5 text-muted-foreground" />
+            </button>
 
-              {/* Middle Stats */}
-              <div className="lg:col-span-3 flex flex-col gap-4">
-                <div className="glass-panel p-6 flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-white/60 text-sm">Total Generated</span>
-                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">+{percentChange}%</span>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{receipts.length}</p>
-                  <p className="text-white/40 text-sm mt-1">All time receipts</p>
-                </div>
-
-                <div className="glass-panel p-6 flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-white/60 text-sm">Storage Used</span>
-                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">85%</span>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{(receipts.length * 0.2).toFixed(1)} MB</p>
-                  <p className="text-white/40 text-sm mt-1">Of 100 MB storage</p>
-                </div>
-              </div>
-
-              {/* Bar Chart */}
-              <div className="lg:col-span-5 glass-panel p-6">
-                <BarChartComponent
-                  data={getMonthlyData()}
-                  title="Monthly Activity"
-                />
+            {/* User Avatar - Hidden on mobile since it's in sidebar */}
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold shadow-lg">
+                {userName.charAt(0).toUpperCase()}
               </div>
             </div>
-          </section>
+          </div>
+        </header>
 
-          {/* History Section */}
-          <section className="dashboard-section">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="dashboard-section-title mb-0">History</h2>
-              <Link href="/generator">
-                <Button className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">
-                  <Plus className="h-4 w-4" />
-                  New Receipt
-                </Button>
-              </Link>
+        {/* Bills Section */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Receipts</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <StatCard
+              title="Total Receipts"
+              value={receipts.length}
+              change={percentChange}
+              changeLabel={lastMonthReceipts.toString()}
+            />
+            <StatCard
+              title="This Month"
+              value={thisMonthReceipts}
+              change={percentChange > 0 ? percentChange : undefined}
+            />
+            <StatCard
+              title="Downloaded"
+              value={receipts.filter(r => r.pdf_url || r.png_url).length}
+            />
+            <StatCard
+              title="Credits Left"
+              value={user?.credits === 999999 ? '∞' : user?.credits || 0}
+              icon={<Zap className="h-4 w-4 text-yellow-400" />}
+            />
+          </div>
+        </section>
+
+        {/* Overview Section */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Overview</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Donut Chart */}
+            <div className="lg:col-span-4 bg-card border border-border rounded-3xl p-4 md:p-6">
+              <DonutChart
+                percentage={creditsPercentage}
+                label="Credits Available"
+                value={user?.credits === 999999 ? 'Unlimited' : `${user?.credits || 0} credits`}
+                subValue={user?.credits === 999999 ? 'Pro subscription active' : 'Upgrade for more'}
+              />
             </div>
 
-            <div className="glass-panel overflow-hidden">
-              {receipts.length === 0 ? (
-                <div className="text-center py-16">
-                  <FileText className="h-16 w-16 text-white/20 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-white mb-2">No receipts yet</h3>
-                  <p className="text-white/50 mb-6">Get started by creating your first receipt</p>
-                  <Link href="/generator">
-                    <Button className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">
-                      <Plus className="h-4 w-4" />
-                      Create Receipt
-                    </Button>
-                  </Link>
+            {/* Middle Stats */}
+            <div className="lg:col-span-3 flex flex-col gap-4">
+              <div className="bg-card border border-border rounded-3xl p-4 md:p-6 flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-muted-foreground text-sm">Total Generated</span>
+                  <span className="px-2 py-1 bg-green-500/20 text-green-600 dark:text-green-400 text-xs rounded-full">+{percentChange}%</span>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left p-4 text-white/50 text-sm font-medium">Business</th>
-                        <th className="text-left p-4 text-white/50 text-sm font-medium">Date</th>
-                        <th className="text-left p-4 text-white/50 text-sm font-medium">Format</th>
-                        <th className="text-left p-4 text-white/50 text-sm font-medium">Status</th>
-                        <th className="text-right p-4 text-white/50 text-sm font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {receipts.slice(0, 10).map((receipt) => (
-                        <tr
-                          key={receipt.id}
-                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                        >
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center">
-                                <FileText className="h-5 w-5 text-purple-300" />
-                              </div>
-                              <div>
-                                <p className="text-white font-medium">
-                                  {receipt.business_info_json?.name || 'Untitled Receipt'}
-                                </p>
-                                <p className="text-white/40 text-sm">
-                                  {receipt.business_info_json?.email || 'No email'}
-                                </p>
-                              </div>
+                <p className="text-2xl md:text-3xl font-bold text-foreground">{receipts.length}</p>
+                <p className="text-muted-foreground text-sm mt-1">All time receipts</p>
+              </div>
+
+              <div className="bg-card border border-border rounded-3xl p-4 md:p-6 flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-muted-foreground text-sm">Storage Used</span>
+                  <span className="px-2 py-1 bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs rounded-full">85%</span>
+                </div>
+                <p className="text-2xl md:text-3xl font-bold text-foreground">{(receipts.length * 0.2).toFixed(1)} MB</p>
+                <p className="text-muted-foreground text-sm mt-1">Of 100 MB storage</p>
+              </div>
+            </div>
+
+            {/* Bar Chart */}
+            <div className="lg:col-span-5 bg-card border border-border rounded-3xl p-4 md:p-6">
+              <BarChartComponent
+                data={getMonthlyData()}
+                title="Monthly Activity"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* History Section */}
+        <section className="mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <h2 className="text-lg font-semibold text-foreground">History</h2>
+            <Link href="/generator">
+              <Button className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                New Receipt
+              </Button>
+            </Link>
+          </div>
+
+          <div className="bg-card border border-border rounded-3xl overflow-hidden">
+            {receipts.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-foreground mb-2">No receipts yet</h3>
+                <p className="text-muted-foreground mb-6">Get started by creating your first receipt</p>
+                <Link href="/generator">
+                  <Button className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">
+                    <Plus className="h-4 w-4" />
+                    Create Receipt
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px]">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left p-4 text-muted-foreground text-sm font-medium">Business</th>
+                      <th className="text-left p-4 text-muted-foreground text-sm font-medium hidden sm:table-cell">Date</th>
+                      <th className="text-left p-4 text-muted-foreground text-sm font-medium hidden md:table-cell">Format</th>
+                      <th className="text-left p-4 text-muted-foreground text-sm font-medium">Status</th>
+                      <th className="text-right p-4 text-muted-foreground text-sm font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {receipts.slice(0, 10).map((receipt) => (
+                      <tr
+                        key={receipt.id}
+                        className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center flex-shrink-0">
+                              <FileText className="h-5 w-5 text-purple-500 dark:text-purple-300" />
                             </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2 text-white/70">
-                              <Clock className="h-4 w-4" />
-                              <span>{new Date(receipt.created_at).toLocaleDateString()}</span>
+                            <div className="min-w-0">
+                              <p className="text-foreground font-medium truncate">
+                                {receipt.business_info_json?.name || 'Untitled Receipt'}
+                              </p>
+                              <p className="text-muted-foreground text-sm truncate sm:hidden">
+                                {new Date(receipt.created_at).toLocaleDateString()}
+                              </p>
                             </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              {receipt.pdf_url && (
-                                <span className="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded-lg">PDF</span>
-                              )}
-                              {receipt.png_url && (
-                                <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-lg">PNG</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className="status-badge status-completed flex items-center gap-1 w-fit">
-                              <CheckCircle className="h-3 w-3" />
-                              Completed
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center justify-end gap-2">
-                              {(receipt.pdf_url || receipt.png_url) && (
-                                <button
-                                  onClick={() => handlePreview(receipt.png_url || receipt.pdf_url)}
-                                  className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
-                                  title="Preview"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                              )}
-                              {receipt.pdf_url && (
-                                <a
-                                  href={receipt.pdf_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
-                                  title="Download PDF"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </a>
-                              )}
+                          </div>
+                        </td>
+                        <td className="p-4 hidden sm:table-cell">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span>{new Date(receipt.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </td>
+                        <td className="p-4 hidden md:table-cell">
+                          <div className="flex items-center gap-2">
+                            {receipt.pdf_url && (
+                              <span className="px-2 py-1 bg-red-500/20 text-red-600 dark:text-red-300 text-xs rounded-lg">PDF</span>
+                            )}
+                            {receipt.png_url && (
+                              <span className="px-2 py-1 bg-blue-500/20 text-blue-600 dark:text-blue-300 text-xs rounded-lg">PNG</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-600 dark:text-green-400">
+                            <CheckCircle className="h-3 w-3" />
+                            <span className="hidden sm:inline">Completed</span>
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-1 sm:gap-2">
+                            {(receipt.pdf_url || receipt.png_url) && (
                               <button
-                                onClick={() => deleteReceipt(receipt.id)}
-                                className="p-2 rounded-lg hover:bg-red-500/20 text-white/60 hover:text-red-400 transition-colors"
-                                title="Delete"
+                                onClick={() => handlePreview(receipt.png_url || receipt.pdf_url)}
+                                className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                title="Preview"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Eye className="h-4 w-4" />
                               </button>
-                              <button className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors">
-                                <MoreVertical className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </section>
-        </main>
-      </div>
+                            )}
+                            {receipt.pdf_url && (
+                              <a
+                                href={receipt.pdf_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                title="Download PDF"
+                              >
+                                <Download className="h-4 w-4" />
+                              </a>
+                            )}
+                            <button
+                              onClick={() => deleteReceipt(receipt.id)}
+                              className="p-2 rounded-lg hover:bg-red-500/20 text-muted-foreground hover:text-red-500 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                            <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
 
       {/* Preview Modal */}
       {mounted && isPreviewOpen && (
@@ -427,14 +419,14 @@ export default function DashboardPage() {
           onClick={() => setIsPreviewOpen(false)}
         >
           <div
-            className="glass-panel max-w-4xl max-h-[90vh] overflow-auto"
+            className="bg-card border border-border rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white/10 backdrop-blur-xl border-b border-white/10 p-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Receipt Preview</h2>
+            <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">Receipt Preview</h2>
               <button
                 onClick={() => setIsPreviewOpen(false)}
-                className="text-white/70 hover:text-white text-2xl"
+                className="text-muted-foreground hover:text-foreground text-2xl"
               >
                 ×
               </button>
@@ -443,21 +435,21 @@ export default function DashboardPage() {
               {previewUrl?.endsWith('.pdf') ? (
                 <iframe
                   src={previewUrl}
-                  className="w-full h-96 border border-white/20 rounded-lg"
+                  className="w-full h-96 border border-border rounded-lg"
                   title="Receipt Preview"
                 />
               ) : (
                 <img
                   src={previewUrl || ''}
                   alt="Receipt Preview"
-                  className="w-full max-w-md mx-auto border border-white/20 rounded-lg shadow-2xl"
+                  className="w-full max-w-md mx-auto border border-border rounded-lg shadow-2xl"
                 />
               )}
             </div>
-            <div className="border-t border-white/10 p-4 flex justify-end gap-2">
+            <div className="border-t border-border p-4 flex flex-col sm:flex-row justify-end gap-2">
               {previewUrl && (
-                <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-                  <Button className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
+                <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                  <Button className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 w-full">
                     <Download className="h-4 w-4" />
                     Download
                   </Button>
@@ -466,7 +458,7 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsPreviewOpen(false)}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="w-full sm:w-auto"
               >
                 Close
               </Button>
@@ -474,6 +466,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </LavenderBackground>
+    </div>
   )
 }

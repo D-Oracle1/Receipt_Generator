@@ -16,13 +16,13 @@ export default function BarChartComponent({ data, title }: BarChartComponentProp
   return (
     <div className="w-full h-full">
       {title && (
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white/80 text-sm font-medium">{title}</h3>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+          <h3 className="text-foreground/80 text-sm font-medium">{title}</h3>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 rounded-lg text-white/70 transition-colors">
+            <button className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-lg text-muted-foreground transition-colors">
               Yearly Statement
             </button>
-            <button className="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 rounded-lg text-white/70 transition-colors">
+            <button className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-lg text-muted-foreground transition-colors">
               View History
             </button>
           </div>
@@ -30,26 +30,26 @@ export default function BarChartComponent({ data, title }: BarChartComponentProp
       )}
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
           <XAxis
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
+            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'rgba(0,0,0,0.8)',
-              border: 'none',
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
-              color: 'white',
+              color: 'hsl(var(--foreground))',
             }}
-            cursor={{ fill: 'rgba(255,255,255,0.1)' }}
+            cursor={{ fill: 'hsl(var(--muted))' }}
           />
           <Bar
             dataKey="value"

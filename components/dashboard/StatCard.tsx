@@ -29,10 +29,10 @@ export default function StatCard({
   return (
     <div
       className={cn(
-        "relative p-5 rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-[1.02]",
+        "relative p-4 md:p-5 rounded-2xl border transition-all duration-300 hover:scale-[1.02]",
         variant === 'default'
-          ? "bg-white/10 border-white/20 hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/20"
-          : "bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-400/30 hover:border-purple-400/50",
+          ? "bg-card border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
+          : "bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-primary/30 hover:border-primary/50",
         className
       )}
     >
@@ -40,10 +40,10 @@ export default function StatCard({
       {change !== undefined && (
         <div
           className={cn(
-            "absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-            isPositive && "bg-green-500/20 text-green-400",
-            isNegative && "bg-red-500/20 text-red-400",
-            isNeutral && "bg-gray-500/20 text-gray-400"
+            "absolute top-3 md:top-4 right-3 md:right-4 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+            isPositive && "bg-green-500/20 text-green-600 dark:text-green-400",
+            isNegative && "bg-red-500/20 text-red-600 dark:text-red-400",
+            isNeutral && "bg-muted text-muted-foreground"
           )}
         >
           {isPositive && <TrendingUp className="h-3 w-3" />}
@@ -55,18 +55,18 @@ export default function StatCard({
 
       {/* Icon */}
       {icon && (
-        <div className="absolute top-4 right-4 p-2 rounded-xl bg-white/10">
+        <div className="absolute top-3 md:top-4 right-3 md:right-4 p-2 rounded-xl bg-muted">
           {icon}
         </div>
       )}
 
       {/* Content */}
       <div className="space-y-2">
-        <p className="text-white/60 text-sm">{title}</p>
+        <p className="text-muted-foreground text-xs md:text-sm">{title}</p>
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-white">{value}</span>
+          <span className="text-2xl md:text-3xl font-bold text-foreground">{value}</span>
           {changeLabel && (
-            <span className="text-white/40 text-lg">- {changeLabel}</span>
+            <span className="text-muted-foreground text-base md:text-lg">- {changeLabel}</span>
           )}
         </div>
       </div>

@@ -13,7 +13,7 @@ export default function DonutChart({ percentage, label, value, subValue }: Donut
   // Create data for the gauge effect
   const data = [
     { value: percentage, color: 'url(#gradient)' },
-    { value: 100 - percentage, color: 'rgba(255,255,255,0.1)' },
+    { value: 100 - percentage, color: 'var(--muted)' },
   ]
 
   return (
@@ -40,7 +40,10 @@ export default function DonutChart({ percentage, label, value, subValue }: Donut
             stroke="none"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell
+                key={`cell-${index}`}
+                fill={index === 0 ? entry.color : 'hsl(var(--muted))'}
+              />
             ))}
           </Pie>
         </PieChart>
@@ -48,14 +51,14 @@ export default function DonutChart({ percentage, label, value, subValue }: Donut
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
-        <span className="text-4xl font-bold text-white">{percentage}%</span>
+        <span className="text-3xl md:text-4xl font-bold text-foreground">{percentage}%</span>
       </div>
 
       {/* Bottom content */}
       <div className="absolute bottom-0 left-0 right-0 text-center pb-2">
-        <p className="text-white/60 text-sm">{label}</p>
-        <p className="text-2xl font-bold text-white">{value}</p>
-        {subValue && <p className="text-white/50 text-sm">{subValue}</p>}
+        <p className="text-muted-foreground text-sm">{label}</p>
+        <p className="text-xl md:text-2xl font-bold text-foreground">{value}</p>
+        {subValue && <p className="text-muted-foreground text-sm">{subValue}</p>}
       </div>
     </div>
   )
