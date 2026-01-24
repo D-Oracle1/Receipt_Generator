@@ -1,8 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '')
 
 export interface ReceiptLayout {
   page: {
@@ -111,37 +109,27 @@ export async function extractLayoutFromImage(
   imageBase64: string
 ): Promise<ReceiptLayout> {
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2048,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: 'image/jpeg',
-                data: imageBase64,
-              },
-            },
-            {
-              type: 'text',
-              text: LAYOUT_EXTRACTION_PROMPT,
-            },
-          ],
-        },
-      ],
-    })
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-    const textContent = message.content.find((c) => c.type === 'text')
-    if (!textContent || textContent.type !== 'text') {
-      throw new Error('No text response from Claude')
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: imageBase64,
+        },
+      },
+      { text: LAYOUT_EXTRACTION_PROMPT },
+    ])
+
+    const response = await result.response
+    const textContent = response.text()
+
+    if (!textContent) {
+      throw new Error('No text response from Gemini')
     }
 
     // Extract JSON from response (handle potential markdown code blocks)
-    let jsonText = textContent.text.trim()
+    let jsonText = textContent.trim()
     if (jsonText.startsWith('```')) {
       jsonText = jsonText.replace(/```json?\n?/g, '').replace(/```\n?$/g, '')
     }
