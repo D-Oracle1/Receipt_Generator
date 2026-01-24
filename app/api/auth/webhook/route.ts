@@ -32,16 +32,16 @@ export async function POST(req: NextRequest) {
         const customerId = subscription.customer as string
 
         // Get user by stripe customer ID
-        const { data: existingSub } = await supabaseAdmin
-          .from('subscriptions')
+        const { data: existingSub } = await (getSupabaseAdmin()
+          .from('subscriptions') as any)
           .select('user_id')
           .eq('stripe_customer_id', customerId)
           .single()
 
         if (existingSub) {
           // Update subscription
-          await supabaseAdmin
-            .from('subscriptions')
+          await (getSupabaseAdmin()
+            .from('subscriptions') as any)
             .update({
               stripe_subscription_id: subscription.id,
               status: subscription.status,
@@ -50,8 +50,8 @@ export async function POST(req: NextRequest) {
 
           // Update user credits based on plan
           const credits = subscription.status === 'active' ? 999999 : 3
-          await supabaseAdmin
-            .from('users')
+          await (getSupabaseAdmin()
+            .from('users') as any)
             .update({ credits })
             .eq('id', existingSub.user_id)
         }
@@ -62,21 +62,21 @@ export async function POST(req: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription
         const customerId = subscription.customer as string
 
-        const { data: existingSub } = await supabaseAdmin
-          .from('subscriptions')
+        const { data: existingSub } = await (getSupabaseAdmin()
+          .from('subscriptions') as any)
           .select('user_id')
           .eq('stripe_customer_id', customerId)
           .single()
 
         if (existingSub) {
           // Reset to free tier
-          await supabaseAdmin
-            .from('subscriptions')
+          await (getSupabaseAdmin()
+            .from('subscriptions') as any)
             .update({ status: 'canceled' })
             .eq('stripe_customer_id', customerId)
 
-          await supabaseAdmin
-            .from('users')
+          await (getSupabaseAdmin()
+            .from('users') as any)
             .update({ credits: 3 })
             .eq('id', existingSub.user_id)
         }
@@ -90,16 +90,18 @@ export async function POST(req: NextRequest) {
 
         // Create subscription record
         if (session.metadata?.userId) {
-          await getSupabaseAdmin().from('subscriptions').insert({
-            user_id: session.metadata.userId,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            status: 'active',
-          })
+          await (getSupabaseAdmin()
+            .from('subscriptions') as any)
+            .insert({
+              user_id: session.metadata.userId,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              status: 'active',
+            })
 
           // Update user credits
-          await supabaseAdmin
-            .from('users')
+          await (getSupabaseAdmin()
+            .from('users') as any)
             .update({ credits: 999999 })
             .eq('id', session.metadata.userId)
         }
