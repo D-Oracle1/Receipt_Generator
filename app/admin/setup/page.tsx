@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { Sparkles, Loader2, CheckCircle, Shield } from 'lucide-react'
 
@@ -65,7 +65,7 @@ export default function AdminSetupPage() {
       }
 
       // Create admin account via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await getSupabase().auth.signUp({
         email,
         password,
         options: {

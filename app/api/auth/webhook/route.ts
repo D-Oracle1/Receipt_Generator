@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { supabaseAdmin } from '@/lib/supabase/client'
+import { getSupabaseAdmin } from '@/lib/supabase/client'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
 
         // Create subscription record
         if (session.metadata?.userId) {
-          await supabaseAdmin.from('subscriptions').insert({
+          await getSupabaseAdmin().from('subscriptions').insert({
             user_id: session.metadata.userId,
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,

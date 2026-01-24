@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { GlassCard, GlassCardContent, GlassCardDescription, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { Plus, FileText, Download, Trash2, LogOut, Sparkles, Zap, Eye } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import LavenderBackground from '@/components/LavenderBackground'
@@ -43,7 +43,7 @@ export default function DashboardPage() {
   }, [])
 
   async function loadUserData() {
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await getSupabase().auth.getSession()
     if (!session) {
       window.location.href = '/auth/login'
       return
@@ -88,7 +88,7 @@ export default function DashboardPage() {
   }
 
   async function handleSignOut() {
-    await supabase.auth.signOut()
+    await getSupabase().auth.signOut()
     window.location.href = '/'
   }
 

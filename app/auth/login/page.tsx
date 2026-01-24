@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { Loader2, Settings } from 'lucide-react'
 
@@ -22,7 +22,7 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { error } = await getSupabase().auth.signUp({
           email,
           password,
           options: {
@@ -37,7 +37,7 @@ export default function LoginPage() {
           description: 'Please check your email to verify your account',
         })
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error } = await getSupabase().auth.signInWithPassword({
           email,
           password,
         })
@@ -63,7 +63,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogleSignIn() {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await getSupabase().auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/dashboard`,

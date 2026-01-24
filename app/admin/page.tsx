@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/getSupabase()/client'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, Users, FileText, Shield, Ban } from 'lucide-react'
 
@@ -39,13 +39,13 @@ export default function AdminPage() {
   }, [])
 
   async function checkAdminAccess() {
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await getSupabase().auth.getSession()
     if (!session) {
       window.location.href = '/auth/login'
       return
     }
 
-    const { data: userData } = await supabase
+    const { data: userData } = await getSupabase()
       .from('users')
       .select('*')
       .eq('id', session.user.id)
@@ -65,7 +65,7 @@ export default function AdminPage() {
     setLoading(true)
 
     // Load users
-    const { data: usersData } = await supabase
+    const { data: usersData } = await getSupabase()
       .from('users')
       .select('*')
       .order('created_at', { ascending: false })
@@ -75,15 +75,15 @@ export default function AdminPage() {
     }
 
     // Load stats
-    const { count: usersCount } = await supabase
+    const { count: usersCount } = await getSupabase()
       .from('users')
       .select('*', { count: 'exact', head: true })
 
-    const { count: receiptsCount } = await supabase
+    const { count: receiptsCount } = await getSupabase()
       .from('receipts')
       .select('*', { count: 'exact', head: true })
 
-    const { count: subscriptionsCount } = await supabase
+    const { count: subscriptionsCount } = await getSupabase()
       .from('subscriptions')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active')
@@ -98,7 +98,7 @@ export default function AdminPage() {
   }
 
   async function toggleBanUser(userId: string, currentBanStatus: boolean) {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('users')
       .update({ is_banned: !currentBanStatus })
       .eq('id', userId)
@@ -119,7 +119,7 @@ export default function AdminPage() {
   }
 
   async function updateUserCredits(userId: string, credits: number) {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('users')
       .update({ credits })
       .eq('id', userId)

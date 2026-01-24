@@ -16,7 +16,19 @@
       "Bash(cat:*)",
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(BUILD_CONFIG.md)",
+      "Bash(vercel env:*)",
+      "Bash(vercel login)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel --prod:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel:*)",
+      "Bash(where:*)",
+      "Bash(npx vercel --prod --yes)",
+      "Bash(tee:*)",
+      "Bash(printf:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
