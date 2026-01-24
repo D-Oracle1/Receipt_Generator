@@ -49,7 +49,7 @@ export default function AdminPage() {
       .from('users')
       .select('*')
       .eq('id', session.user.id)
-      .single()
+      .single() as { data: AdminUser | null }
 
     if (!userData?.is_admin) {
       toast({
@@ -68,7 +68,7 @@ export default function AdminPage() {
     const { data: usersData } = await getSupabase()
       .from('users')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) as { data: AdminUser[] | null }
 
     if (usersData) {
       setUsers(usersData)
