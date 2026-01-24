@@ -45,8 +45,8 @@ export default function AdminPage() {
       return
     }
 
-    const { data: userData } = await getSupabase()
-      .from('users')
+    const { data: userData } = await (getSupabase()
+      .from('users') as any)
       .select('*')
       .eq('id', session.user.id)
       .single() as { data: AdminUser | null }
@@ -65,8 +65,8 @@ export default function AdminPage() {
     setLoading(true)
 
     // Load users
-    const { data: usersData } = await getSupabase()
-      .from('users')
+    const { data: usersData } = await (getSupabase()
+      .from('users') as any)
       .select('*')
       .order('created_at', { ascending: false }) as { data: AdminUser[] | null }
 
@@ -75,16 +75,16 @@ export default function AdminPage() {
     }
 
     // Load stats
-    const { count: usersCount } = await getSupabase()
-      .from('users')
+    const { count: usersCount } = await (getSupabase()
+      .from('users') as any)
       .select('*', { count: 'exact', head: true })
 
-    const { count: receiptsCount } = await getSupabase()
-      .from('receipts')
+    const { count: receiptsCount } = await (getSupabase()
+      .from('receipts') as any)
       .select('*', { count: 'exact', head: true })
 
-    const { count: subscriptionsCount } = await getSupabase()
-      .from('subscriptions')
+    const { count: subscriptionsCount } = await (getSupabase()
+      .from('subscriptions') as any)
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active')
 
@@ -98,8 +98,8 @@ export default function AdminPage() {
   }
 
   async function toggleBanUser(userId: string, currentBanStatus: boolean) {
-    const { error } = await getSupabase()
-      .from('users')
+    const { error } = await (getSupabase()
+      .from('users') as any)
       .update({ is_banned: !currentBanStatus })
       .eq('id', userId)
 
@@ -119,8 +119,8 @@ export default function AdminPage() {
   }
 
   async function updateUserCredits(userId: string, credits: number) {
-    const { error } = await getSupabase()
-      .from('users')
+    const { error } = await (getSupabase()
+      .from('users') as any)
       .update({ credits })
       .eq('id', userId)
 
