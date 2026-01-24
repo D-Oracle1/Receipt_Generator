@@ -131,7 +131,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background">
       <Sidebar onSignOut={handleSignOut} userEmail={user?.email} isAdmin={user?.is_admin} />
 
-      <main className="md:ml-20 p-4 md:p-6 pt-20 md:pt-6">
+      <main className="md:ml-64 p-4 md:p-6 pt-20 md:pt-6 transition-all duration-300">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">

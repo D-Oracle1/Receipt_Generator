@@ -16,8 +16,11 @@ import {
   Clock,
   CheckCircle,
   MoreVertical,
+  Moon,
+  Sun,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import { useTheme } from '@/components/ThemeProvider'
 import Sidebar from '@/components/dashboard/Sidebar'
 import StatCard from '@/components/dashboard/StatCard'
 import DonutChart from '@/components/dashboard/DonutChart'
@@ -46,6 +49,7 @@ export default function DashboardPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { toast } = useToast()
+  const { resolvedTheme, setTheme } = useTheme()
 
   useEffect(() => {
     setMounted(true)
@@ -181,17 +185,17 @@ export default function DashboardPage() {
       <Sidebar onSignOut={handleSignOut} userEmail={user?.email} isAdmin={user?.is_admin} />
 
       {/* Main Content */}
-      <main className="md:ml-20 p-4 md:p-6 pt-20 md:pt-6 overflow-auto">
+      <main className="md:ml-64 p-4 md:p-6 pt-20 md:pt-6 overflow-auto transition-all duration-300">
         {/* Header */}
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              {getGreeting()}, {userName.charAt(0).toUpperCase() + userName.slice(1)}
+              {getGreeting()} {userName.charAt(0).toUpperCase() + userName.slice(1)}
             </h1>
             <p className="text-muted-foreground mt-1">Your weekly financial update</p>
           </div>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {/* Search */}
             <div className="relative flex-1 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -201,6 +205,19 @@ export default function DashboardPage() {
                 className="w-full sm:w-64 pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
             </div>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              className="p-3 rounded-xl bg-card border border-border hover:bg-muted transition-colors"
+              title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {resolvedTheme === 'dark' ? (
+                <Sun className="h-5 w-5 text-yellow-400" />
+              ) : (
+                <Moon className="h-5 w-5 text-muted-foreground" />
+              )}
+            </button>
 
             {/* Notifications */}
             <button className="p-3 rounded-xl bg-card border border-border hover:bg-muted transition-colors">

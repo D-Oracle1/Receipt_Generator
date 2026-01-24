@@ -126,7 +126,7 @@ export default function ReceiptsPage() {
     <div className="min-h-screen bg-background">
       <Sidebar onSignOut={handleSignOut} userEmail={user?.email} isAdmin={user?.is_admin} />
 
-      <main className="md:ml-20 p-4 md:p-6 pt-20 md:pt-6">
+      <main className="md:ml-64 p-4 md:p-6 pt-20 md:pt-6 transition-all duration-300">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>

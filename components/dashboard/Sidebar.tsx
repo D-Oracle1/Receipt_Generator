@@ -17,10 +17,7 @@ import {
   ChevronRight,
   Menu,
   X,
-  Moon,
-  Sun,
 } from 'lucide-react'
-import { useTheme } from '@/components/ThemeProvider'
 
 interface SidebarProps {
   onSignOut: () => void
@@ -38,9 +35,8 @@ const navItems = [
 
 export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps) {
   const pathname = usePathname()
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
-  const { theme, setTheme, resolvedTheme } = useTheme()
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -58,11 +54,7 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-  }
-
-  const SidebarContent = () => (
+  const SidebarContent = ({ showLabels = true }: { showLabels?: boolean }) => (
     <>
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8">
@@ -72,7 +64,7 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
         >
           <Sparkles className="h-6 w-6 text-white" />
         </Link>
-        {isExpanded && (
+        {showLabels && (
           <span className="text-xl font-bold text-foreground whitespace-nowrap">
             Receipt Gen
           </span>
@@ -103,7 +95,7 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
                   isActive ? "text-primary dark:text-white" : "text-muted-foreground group-hover:text-primary dark:group-hover:text-white"
                 )}
               />
-              {isExpanded && (
+              {showLabels && (
                 <span className={cn(
                   "whitespace-nowrap transition-colors",
                   isActive ? "text-primary dark:text-white font-medium" : "text-muted-foreground group-hover:text-primary dark:group-hover:text-white"
@@ -112,7 +104,7 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
                 </span>
               )}
               {/* Tooltip for collapsed state */}
-              {!isExpanded && (
+              {!showLabels && (
                 <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg border border-border">
                   {item.label}
                 </span>
@@ -132,12 +124,12 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
             )}
           >
             <User className="h-5 w-5 text-yellow-500 flex-shrink-0" />
-            {isExpanded && (
+            {showLabels && (
               <span className="text-yellow-500 whitespace-nowrap font-medium">
                 Admin Panel
               </span>
             )}
-            {!isExpanded && (
+            {!showLabels && (
               <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg border border-border">
                 Admin Panel
               </span>
@@ -148,40 +140,18 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
 
       {/* Bottom section */}
       <div className="flex flex-col gap-3 pt-4 border-t border-border dark:border-white/20">
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="group relative flex items-center gap-3 p-3 rounded-xl transition-all duration-300 hover:bg-primary/10 dark:hover:bg-white/10"
-        >
-          {resolvedTheme === 'dark' ? (
-            <Sun className="h-5 w-5 text-yellow-400 flex-shrink-0" />
-          ) : (
-            <Moon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-          )}
-          {isExpanded && (
-            <span className="text-muted-foreground whitespace-nowrap">
-              {resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          )}
-          {!isExpanded && (
-            <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg border border-border">
-              {resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          )}
-        </button>
-
         {/* Sign Out */}
         <button
           onClick={onSignOut}
           className="group relative flex items-center gap-3 p-3 rounded-xl transition-all duration-300 hover:bg-red-500/20"
         >
           <LogOut className="h-5 w-5 text-muted-foreground group-hover:text-red-400 transition-colors flex-shrink-0" />
-          {isExpanded && (
+          {showLabels && (
             <span className="text-muted-foreground group-hover:text-red-400 whitespace-nowrap">
               Sign Out
             </span>
           )}
-          {!isExpanded && (
+          {!showLabels && (
             <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg border border-border">
               Sign Out
             </span>
@@ -191,12 +161,12 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
         {/* User Avatar */}
         <div className={cn(
           "flex items-center gap-3 p-2",
-          isExpanded ? "justify-start" : "justify-center"
+          showLabels ? "justify-start" : "justify-center"
         )}>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold text-sm shadow-lg flex-shrink-0">
             {userEmail?.charAt(0).toUpperCase() || 'U'}
           </div>
-          {isExpanded && (
+          {showLabels && (
             <div className="overflow-hidden">
               <p className="text-sm font-medium text-foreground truncate">
                 {userEmail?.split('@')[0] || 'User'}
@@ -243,7 +213,7 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
           <X className="h-5 w-5 text-muted-foreground" />
         </button>
         <div className="flex flex-col h-full" style={{ paddingTop: '2rem' }}>
-          <SidebarContent />
+          <SidebarContent showLabels={true} />
         </div>
       </aside>
 
@@ -253,10 +223,8 @@ export default function Sidebar({ onSignOut, userEmail, isAdmin }: SidebarProps)
           "hidden md:flex fixed left-0 top-0 h-screen flex-col p-4 bg-card/80 dark:bg-white/10 backdrop-blur-xl border-r border-border dark:border-white/20 z-40 transition-all duration-300",
           isExpanded ? "w-64" : "w-20"
         )}
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
       >
-        <SidebarContent />
+        <SidebarContent showLabels={isExpanded} />
 
         {/* Expand/Collapse Button */}
         <button
