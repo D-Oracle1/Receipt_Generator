@@ -9,8 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useReceiptStore } from '@/lib/store/useReceiptStore'
 import { useToast } from '@/components/ui/use-toast'
-import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2 } from 'lucide-react'
+import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2, Palette } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
+import { LogoUpload } from '@/components/LogoUpload'
+import { SignatureUpload } from '@/components/SignatureUpload'
 
 // Compress image to reduce file size for upload
 async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
@@ -83,11 +85,16 @@ export default function GeneratorPage() {
     total,
     calculateTotals,
     getReceiptData,
+    logoUrl,
+    setLogoUrl,
   } = useReceiptStore()
 
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [newItem, setNewItem] = useState({ name: '', quantity: 1, price: 0 })
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null)
+  const [primaryColor, setPrimaryColor] = useState('#000000')
+  const [secondaryColor, setSecondaryColor] = useState('#666666')
   const { toast } = useToast()
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -179,13 +186,21 @@ export default function GeneratorPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           layout,
-          businessInfo,
+          businessInfo: {
+            ...businessInfo,
+            logoUrl: logoUrl || undefined,
+          },
           items,
           subtotal,
           tax,
           total,
           receiptNumber,
           notes,
+          signatureUrl,
+          colors: {
+            primary: primaryColor,
+            secondary: secondaryColor,
+          },
         }),
       })
 
@@ -290,9 +305,10 @@ export default function GeneratorPage() {
             </Card>
 
             <Tabs defaultValue="business" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="business">Business</TabsTrigger>
                 <TabsTrigger value="items">Items</TabsTrigger>
+                <TabsTrigger value="customize">Customize</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
 
@@ -430,6 +446,77 @@ export default function GeneratorPage() {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="customize">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Customize Receipt</CardTitle>
+                    <CardDescription>Add your logo, signature, and customize colors</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Logo Upload */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">Company Logo</Label>
+                      <LogoUpload
+                        currentLogoUrl={logoUrl}
+                        onLogoChange={setLogoUrl}
+                      />
+                    </div>
+
+                    {/* Signature Upload */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">Signature</Label>
+                      <SignatureUpload
+                        currentSignatureUrl={signatureUrl}
+                        onSignatureChange={setSignatureUrl}
+                      />
+                    </div>
+
+                    {/* Color Settings */}
+                    <div className="space-y-4">
+                      <Label className="text-base font-medium block">Colors</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="primaryColor" className="text-sm text-gray-600">Primary Color</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <input
+                              type="color"
+                              id="primaryColor"
+                              value={primaryColor}
+                              onChange={(e) => setPrimaryColor(e.target.value)}
+                              className="w-10 h-10 rounded border cursor-pointer"
+                            />
+                            <Input
+                              value={primaryColor}
+                              onChange={(e) => setPrimaryColor(e.target.value)}
+                              className="flex-1"
+                              placeholder="#000000"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="secondaryColor" className="text-sm text-gray-600">Secondary Color</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <input
+                              type="color"
+                              id="secondaryColor"
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(e.target.value)}
+                              className="w-10 h-10 rounded border cursor-pointer"
+                            />
+                            <Input
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(e.target.value)}
+                              className="flex-1"
+                              placeholder="#666666"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="settings">
                 <Card>
                   <CardHeader>
@@ -498,10 +585,17 @@ export default function GeneratorPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-white border rounded-lg p-8 shadow-sm max-w-sm mx-auto">
+                <div className="bg-white border rounded-lg p-8 shadow-sm max-w-sm mx-auto" style={{ color: primaryColor }}>
                   {/* Header */}
                   <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold mb-2">
+                    {logoUrl && (
+                      <img
+                        src={logoUrl}
+                        alt="Logo"
+                        className="h-16 object-contain mx-auto mb-3"
+                      />
+                    )}
+                    <h2 className="text-2xl font-bold mb-2" style={{ color: primaryColor }}>
                       {businessInfo.name || 'Business Name'}
                     </h2>
                     <p className="text-sm text-gray-600">
@@ -583,11 +677,20 @@ export default function GeneratorPage() {
 
                   {/* Footer */}
                   {notes && (
-                    <div className="mt-6 text-xs text-gray-600 text-center">
+                    <div className="mt-6 text-xs text-center" style={{ color: secondaryColor }}>
                       {notes}
                     </div>
                   )}
-                  <div className="mt-6 text-center text-sm text-gray-600 border-t pt-4">
+                  {signatureUrl && (
+                    <div className="mt-4 flex justify-end">
+                      <img
+                        src={signatureUrl}
+                        alt="Signature"
+                        className="h-12 object-contain"
+                      />
+                    </div>
+                  )}
+                  <div className="mt-6 text-center text-sm border-t pt-4" style={{ color: secondaryColor }}>
                     Thank you for your business!
                   </div>
                 </div>
