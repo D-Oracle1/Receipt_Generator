@@ -35,8 +35,8 @@ export default function AdminSetupPage() {
   async function checkExistingAdmins() {
     setCheckingAdmins(true)
     try {
-      const { count } = await supabase
-        .from('users')
+      const { count } = await (getSupabase()
+        .from('users') as any)
         .select('*', { count: 'exact', head: true })
         .eq('is_admin', true)
 
@@ -80,8 +80,8 @@ export default function AdminSetupPage() {
       }
 
       // Update user record to mark as admin
-      const { error: updateError } = await supabase
-        .from('users')
+      const { error: updateError } = await (getSupabase()
+        .from('users') as any)
         .update({
           is_admin: true,
           credits: 999999, // Unlimited credits for admin
