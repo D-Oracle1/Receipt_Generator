@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getSupabase } from '@/lib/getSupabase()/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, Users, FileText, Shield, Ban } from 'lucide-react'
 
