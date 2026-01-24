@@ -5,17 +5,18 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClient()
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: receipts, error } = await (supabase
       .from('receipts') as any)
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -40,10 +41,11 @@ export async function DELETE(req: NextRequest) {
   try {
     const supabase = createServerClient()
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -61,7 +63,7 @@ export async function DELETE(req: NextRequest) {
       .from('receipts') as any)
       .delete()
       .eq('id', receiptId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.error('Delete receipt error:', error)

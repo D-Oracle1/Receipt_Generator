@@ -5,10 +5,11 @@ export async function PUT(req: NextRequest) {
   try {
     const supabase = createServerClient()
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -23,7 +24,7 @@ export async function PUT(req: NextRequest) {
         company,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .select()
       .single()
 

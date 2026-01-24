@@ -6,10 +6,11 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient()
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     const layout = await extractLayoutFromImage(base64)
 
     // Save the uploaded file to Supabase storage
-    const fileName = `${session.user.id}/${Date.now()}-${file.name}`
+    const fileName = `${user.id}/${Date.now()}-${file.name}`
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('uploads')
       .upload(fileName, buffer, {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     // Save file record
     if (uploadData) {
       await (supabase.from('files') as any).insert({
-        user_id: session.user.id,
+        user_id: user.id,
         file_url: publicUrl,
         file_type: 'sample',
       })

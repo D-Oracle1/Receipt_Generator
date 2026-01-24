@@ -6,10 +6,11 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient()
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     const { data: userData, error: userError } = await (supabase
       .from('users') as any)
       .select('credits, is_banned')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     if (userError || !userData) {
@@ -64,8 +65,8 @@ export async function POST(req: NextRequest) {
 
     // Upload to Supabase storage
     const timestamp = Date.now()
-    const pdfFileName = `${session.user.id}/${timestamp}-receipt.pdf`
-    const pngFileName = `${session.user.id}/${timestamp}-receipt.png`
+    const pdfFileName = `${user.id}/${timestamp}-receipt.pdf`
+    const pngFileName = `${user.id}/${timestamp}-receipt.png`
 
     const [pdfUpload, pngUpload] = await Promise.all([
       supabase.storage.from('receipts').upload(pdfFileName, pdfBuffer, {
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
     const { data: receiptRecord, error: receiptError } = await (supabase
       .from('receipts') as any)
       .insert({
-        user_id: session.user.id,
+        user_id: user.id,
         template_json: layout,
         business_info_json: businessInfo,
         items_json: items,
@@ -117,7 +118,7 @@ export async function POST(req: NextRequest) {
     await (supabase
       .from('users') as any)
       .update({ credits: userData.credits - 1 })
-      .eq('id', session.user.id)
+      .eq('id', user.id)
 
     return NextResponse.json({
       pdfUrl,
