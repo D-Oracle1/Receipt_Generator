@@ -47,7 +47,7 @@ export default function AdminPage() {
 
     const { data: userData } = await supabase
       .from('users')
-      .select('is_admin')
+      .select('*')
       .eq('id', session.user.id)
       .single()
 
