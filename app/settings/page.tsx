@@ -21,6 +21,11 @@ import {
   Monitor,
   Check,
   Loader2,
+  Phone,
+  Building,
+  Edit3,
+  Save,
+  X,
 } from 'lucide-react'
 
 interface UserData {
@@ -28,17 +33,27 @@ interface UserData {
   email: string
   credits: number
   is_admin: boolean
+  display_name?: string
+  phone?: string
+  company?: string
 }
 
 export default function SettingsPage() {
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const { toast } = useToast()
-  const { theme, setTheme, resolvedTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
+
+  // Profile fields
+  const [displayName, setDisplayName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [company, setCompany] = useState('')
 
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true)
@@ -60,6 +75,9 @@ export default function SettingsPage() {
     if (response.ok) {
       const { user } = await response.json()
       setUser(user)
+      setDisplayName(user.display_name || '')
+      setPhone(user.phone || '')
+      setCompany(user.company || '')
     }
     setLoading(false)
   }
@@ -67,6 +85,46 @@ export default function SettingsPage() {
   async function handleSignOut() {
     await getSupabase().auth.signOut()
     window.location.href = '/'
+  }
+
+  async function handleProfileSave() {
+    setSavingProfile(true)
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          display_name: displayName,
+          phone,
+          company,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update profile')
+
+      const { user: updatedUser } = await response.json()
+      setUser(updatedUser)
+      setIsEditingProfile(false)
+      toast({
+        title: 'Success',
+        description: 'Profile updated successfully',
+      })
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update profile',
+        variant: 'destructive',
+      })
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  function handleCancelEdit() {
+    setDisplayName(user?.display_name || '')
+    setPhone(user?.phone || '')
+    setCompany(user?.company || '')
+    setIsEditingProfile(false)
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
@@ -127,6 +185,8 @@ export default function SettingsPage() {
     )
   }
 
+  const userName = user?.display_name || user?.email?.split('@')[0] || 'User'
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar onSignOut={handleSignOut} userEmail={user?.email} isAdmin={user?.is_admin} />
@@ -141,30 +201,69 @@ export default function SettingsPage() {
 
           {/* Profile Section */}
           <section className="bg-card border border-border rounded-2xl p-4 md:p-6 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-primary/10 rounded-xl">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Profile</h2>
-                <p className="text-sm text-muted-foreground">Your account information</p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label className="text-muted-foreground">Email Address</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{user?.email}</span>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Profile</h2>
+                  <p className="text-sm text-muted-foreground">Your account information</p>
                 </div>
               </div>
+              {!isEditingProfile ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingProfile(true)}
+                  className="gap-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    className="gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleProfileSave}
+                    disabled={savingProfile}
+                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  >
+                    {savingProfile ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    Save
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Avatar */}
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                {userName.charAt(0).toUpperCase()}
+              </div>
               <div>
-                <Label className="text-muted-foreground">Account Type</Label>
+                <h3 className="text-xl font-semibold text-foreground">{userName}</h3>
+                <p className="text-muted-foreground">{user?.email}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">
-                    {user?.credits === 999999 ? 'Pro' : 'Free'} Plan
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    user?.credits === 999999
+                      ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {user?.credits === 999999 ? 'Pro Plan' : 'Free Plan'}
                   </span>
                   {user?.is_admin && (
                     <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-xs rounded-full">
@@ -173,14 +272,95 @@ export default function SettingsPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Display Name */}
               <div>
-                <Label className="text-muted-foreground">Credits</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">
-                    {user?.credits === 999999 ? 'Unlimited' : `${user?.credits} credits remaining`}
-                  </span>
-                </div>
+                <Label htmlFor="displayName" className="text-muted-foreground flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Display Name
+                </Label>
+                {isEditingProfile ? (
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="mt-1"
+                  />
+                ) : (
+                  <p className="text-foreground mt-1">{user?.display_name || 'Not set'}</p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div>
+                <Label className="text-muted-foreground flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email Address
+                </Label>
+                <p className="text-foreground mt-1">{user?.email}</p>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <Label htmlFor="phone" className="text-muted-foreground flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Phone Number
+                </Label>
+                {isEditingProfile ? (
+                  <Input
+                    id="phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                    className="mt-1"
+                  />
+                ) : (
+                  <p className="text-foreground mt-1">{user?.phone || 'Not set'}</p>
+                )}
+              </div>
+
+              {/* Company */}
+              <div>
+                <Label htmlFor="company" className="text-muted-foreground flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Company
+                </Label>
+                {isEditingProfile ? (
+                  <Input
+                    id="company"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Enter your company name"
+                    className="mt-1"
+                  />
+                ) : (
+                  <p className="text-foreground mt-1">{user?.company || 'Not set'}</p>
+                )}
+              </div>
+
+              {/* Credits */}
+              <div>
+                <Label className="text-muted-foreground flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Credits
+                </Label>
+                <p className="text-foreground mt-1">
+                  {user?.credits === 999999 ? 'Unlimited' : `${user?.credits} credits remaining`}
+                </p>
+              </div>
+
+              {/* Account Type */}
+              <div>
+                <Label className="text-muted-foreground flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Account Type
+                </Label>
+                <p className="text-foreground mt-1">
+                  {user?.credits === 999999 ? 'Pro' : 'Free'} Plan
+                </p>
               </div>
             </div>
           </section>
