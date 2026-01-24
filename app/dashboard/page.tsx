@@ -48,11 +48,17 @@ export default function DashboardPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [greeting, setGreeting] = useState('Hello')
   const { toast } = useToast()
   const { resolvedTheme, setTheme } = useTheme()
 
   useEffect(() => {
     setMounted(true)
+    // Set greeting on client to avoid hydration mismatch
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting('Good Morning')
+    else if (hour < 18) setGreeting('Good Afternoon')
+    else setGreeting('Good Evening')
   }, [])
 
   useEffect(() => {
@@ -158,14 +164,6 @@ export default function DashboardPage() {
   // Credits usage percentage
   const creditsPercentage = user?.credits === 999999 ? 100 : Math.round((user?.credits || 0))
 
-  // Get greeting based on time
-  const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Good Morning'
-    if (hour < 18) return 'Good Afternoon'
-    return 'Good Evening'
-  }
-
   const userName = user?.email?.split('@')[0] || 'User'
 
   if (loading) {
@@ -190,7 +188,7 @@ export default function DashboardPage() {
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              {getGreeting()} {userName.charAt(0).toUpperCase() + userName.slice(1)}
+              {greeting} {userName.charAt(0).toUpperCase() + userName.slice(1)}
             </h1>
             <p className="text-muted-foreground mt-1">Your weekly financial update</p>
           </div>

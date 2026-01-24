@@ -95,7 +95,13 @@ export default function GeneratorPage() {
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null)
   const [primaryColor, setPrimaryColor] = useState('#000000')
   const [secondaryColor, setSecondaryColor] = useState('#666666')
+  const [currentDate, setCurrentDate] = useState('')
   const { toast } = useToast()
+
+  // Set date on client to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString())
+  }, [])
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -617,7 +623,7 @@ export default function GeneratorPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Date:</span>
-                      <span>{new Date().toLocaleDateString()}</span>
+                      <span>{currentDate || 'Loading...'}</span>
                     </div>
                   </div>
 
