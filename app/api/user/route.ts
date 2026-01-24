@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: user, error } = await supabase
-      .from('users')
+    const { data: user, error } = await (supabase
+      .from('users') as any)
       .select('*')
       .eq('id', session.user.id)
       .single()

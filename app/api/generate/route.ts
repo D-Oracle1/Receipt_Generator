@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Check user credits
-    const { data: userData, error: userError } = await supabase
-      .from('users')
+    const { data: userData, error: userError } = await (supabase
+      .from('users') as any)
       .select('credits, is_banned')
       .eq('id', session.user.id)
       .single()
@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
       .getPublicUrl(pngFileName)
 
     // Save receipt record
-    const { data: receiptRecord, error: receiptError } = await supabase
-      .from('receipts')
+    const { data: receiptRecord, error: receiptError } = await (supabase
+      .from('receipts') as any)
       .insert({
         user_id: session.user.id,
         template_json: layout,
@@ -114,8 +114,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Decrement user credits
-    await supabase
-      .from('users')
+    await (supabase
+      .from('users') as any)
       .update({ credits: userData.credits - 1 })
       .eq('id', session.user.id)
 

@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // Save file record
     if (uploadData) {
-      await supabase.from('files').insert({
+      await (supabase.from('files') as any).insert({
         user_id: session.user.id,
         file_url: publicUrl,
         file_type: 'sample',

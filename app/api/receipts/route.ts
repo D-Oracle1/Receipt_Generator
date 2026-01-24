@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: receipts, error } = await supabase
-      .from('receipts')
+    const { data: receipts, error } = await (supabase
+      .from('receipts') as any)
       .select('*')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
@@ -57,8 +57,8 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    const { error } = await supabase
-      .from('receipts')
+    const { error } = await (supabase
+      .from('receipts') as any)
       .delete()
       .eq('id', receiptId)
       .eq('user_id', session.user.id)

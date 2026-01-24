@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       .getPublicUrl(fileName)
 
     // Save file record
-    await supabase.from('files').insert({
+    await (supabase.from('files') as any).insert({
       user_id: session.user.id,
       file_url: publicUrl,
       file_type: 'logo',
