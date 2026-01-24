@@ -107,4 +107,49 @@
   .gradient-lavender-dark {
     @apply bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950;
   }
+
+  /* New Dashboard Styles */
+  .glass-panel {
+    @apply relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-xl;
+  }
+
+  .glass-panel-light {
+    @apply relative backdrop-blur-xl bg-white/80 border border-white/40 rounded-3xl shadow-xl;
+  }
+
+  .stat-card {
+    @apply relative p-5 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 transition-all duration-300 hover:scale-[1.02] hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/20;
+  }
+
+  .dashboard-section {
+    @apply mb-8;
+  }
+
+  .dashboard-section-title {
+    @apply text-lg font-semibold text-white/90 mb-4;
+  }
+
+  .search-input {
+    @apply w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-purple-400/50 focus:ring-2 focus:ring-purple-400/20 transition-all;
+  }
+
+  .history-row {
+    @apply flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-300;
+  }
+
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .status-completed {
+    @apply bg-green-500/20 text-green-400;
+  }
+
+  .status-pending {
+    @apply bg-yellow-500/20 text-yellow-400;
+  }
+
+  .status-failed {
+    @apply bg-red-500/20 text-red-400;
+  }
 }
