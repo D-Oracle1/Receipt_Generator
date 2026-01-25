@@ -142,7 +142,6 @@ export default function GeneratorPage() {
         })
       } else {
         const data = await response.json()
-        console.log('API Error Response:', data)
         toast({
           title: 'Error',
           description: data.error || 'Failed to extract layout',

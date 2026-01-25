@@ -13,23 +13,8 @@ export async function POST(req: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser()
 
-    // Debug logging
-    console.log('Auth debug:', {
-      hasUser: !!user,
-      userId: user?.id,
-      authError: authError?.message,
-      cookies: req.cookies.getAll().map(c => c.name),
-    })
-
     if (authError || !user) {
-      return NextResponse.json({
-        error: 'Unauthorized',
-        debug: {
-          authError: authError?.message,
-          hasCookies: req.cookies.getAll().length > 0,
-          cookieNames: req.cookies.getAll().map(c => c.name),
-        }
-      }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const formData = await req.formData()
