@@ -1,4 +1,6 @@
 import { ReceiptLayout } from '../ai/extractLayout'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 
 export interface BusinessInfo {
   name: string
@@ -46,7 +48,7 @@ function generateReceiptHTML(
 <head>
   <meta charset="UTF-8">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=${fonts?.primary || 'Inter'}:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
     * {
       margin: 0;
@@ -55,7 +57,7 @@ function generateReceiptHTML(
     }
 
     body {
-      font-family: '${fonts?.primary || 'Inter'}', sans-serif;
+      font-family: 'Inter', sans-serif;
       color: ${colors?.text || '#000000'};
       width: ${page.width}px;
       padding: ${page.padding}px;
@@ -229,27 +231,87 @@ function generateReceiptHTML(
   `.trim()
 }
 
-// Note: PDF generation on the server requires a PDF library
-// For client-side PDF download, use jsPDF with HTML2Canvas
-// For now, return HTML that can be printed or converted on the client
+async function getBrowser() {
+  // For Vercel serverless environment
+  return puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  })
+}
+
 export async function generatePDF(
   layout: ReceiptLayout,
   data: ReceiptData
 ): Promise<Buffer> {
   const html = generateReceiptHTML(layout, data)
-  // Return the HTML as a buffer
-  // Client will use jsPDF to convert this to PDF
-  return Buffer.from(html, 'utf-8')
+
+  let browser = null
+  try {
+    browser = await getBrowser()
+    const page = await browser.newPage()
+
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20px',
+        right: '20px',
+        bottom: '20px',
+        left: '20px',
+      },
+    })
+
+    return Buffer.from(pdfBuffer)
+  } finally {
+    if (browser) {
+      await browser.close()
+    }
+  }
 }
 
-// Generate PNG is client-side only, return HTML
 export async function generatePNG(
   layout: ReceiptLayout,
   data: ReceiptData
 ): Promise<Buffer> {
   const html = generateReceiptHTML(layout, data)
-  // Client-side conversion required
-  return Buffer.from(html, 'utf-8')
+
+  let browser = null
+  try {
+    browser = await getBrowser()
+    const page = await browser.newPage()
+
+    // Set viewport to match receipt width
+    await page.setViewport({
+      width: layout.page.width + (layout.page.padding * 2),
+      height: 800,
+      deviceScaleFactor: 2, // Higher quality
+    })
+
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+
+    // Get the actual content height
+    const bodyHeight = await page.evaluate(() => document.body.scrollHeight)
+    await page.setViewport({
+      width: layout.page.width + (layout.page.padding * 2),
+      height: bodyHeight,
+      deviceScaleFactor: 2,
+    })
+
+    const screenshot = await page.screenshot({
+      type: 'png',
+      fullPage: true,
+    })
+
+    return Buffer.from(screenshot)
+  } finally {
+    if (browser) {
+      await browser.close()
+    }
+  }
 }
 
 // Export HTML generation for client-side use
