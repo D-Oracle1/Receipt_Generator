@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,10 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useReceiptStore } from '@/lib/store/useReceiptStore'
 import { useToast } from '@/components/ui/use-toast'
-import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2, LayoutTemplate, Check } from 'lucide-react'
+import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2, LayoutTemplate } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { LogoUpload } from '@/components/LogoUpload'
 import { SignatureUpload } from '@/components/SignatureUpload'
+import { TemplateGrid } from '@/components/TemplatePreview'
 import { getSupabase } from '@/lib/supabase/client'
 import { receiptTemplates, ReceiptTemplate } from '@/lib/templates/receiptTemplates'
 
@@ -26,7 +28,6 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promis
     img.onload = () => {
       let { width, height } = img
 
-      // Calculate new dimensions while maintaining aspect ratio
       if (width > maxWidth) {
         height = (height * maxWidth) / width
         width = maxWidth
@@ -64,7 +65,31 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promis
   })
 }
 
+// Helper to make authenticated API calls
+async function authFetch(url: string, options: RequestInit = {}) {
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include',
+  })
+
+  if (response.status === 401) {
+    // Try refreshing session
+    const { error } = await getSupabase().auth.refreshSession()
+    if (error) {
+      throw new Error('Session expired. Please login again.')
+    }
+    // Retry the request
+    return fetch(url, {
+      ...options,
+      credentials: 'include',
+    })
+  }
+
+  return response
+}
+
 export default function GeneratorPage() {
+  const router = useRouter()
   const {
     layout,
     setLayout,
@@ -72,7 +97,6 @@ export default function GeneratorPage() {
     setBusinessInfo,
     items,
     addItem,
-    updateItem,
     removeItem,
     taxRate,
     setTaxRate,
@@ -86,7 +110,6 @@ export default function GeneratorPage() {
     tax,
     total,
     calculateTotals,
-    getReceiptData,
     logoUrl,
     setLogoUrl,
   } = useReceiptStore()
@@ -99,7 +122,28 @@ export default function GeneratorPage() {
   const [secondaryColor, setSecondaryColor] = useState('#666666')
   const [currentDate, setCurrentDate] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState<string>('classic')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+
+  // Check authentication on mount
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { data: { user }, error } = await getSupabase().auth.getUser()
+        if (error || !user) {
+          router.push('/auth/login')
+          return
+        }
+        setIsAuthenticated(true)
+      } catch (err) {
+        router.push('/auth/login')
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkAuth()
+  }, [router])
 
   // Set date on client to avoid hydration mismatch
   useEffect(() => {
@@ -109,10 +153,16 @@ export default function GeneratorPage() {
   // Set default template on mount
   useEffect(() => {
     const template = receiptTemplates.find(t => t.id === 'classic')
-    if (template && !layout) {
+    if (template) {
       setLayout(template.layout)
+      if (template.layout.colors?.primary) {
+        setPrimaryColor(template.layout.colors.primary)
+      }
+      if (template.layout.colors?.secondary) {
+        setSecondaryColor(template.layout.colors.secondary)
+      }
     }
-  }, [])
+  }, [setLayout])
 
   const handleTemplateSelect = (template: ReceiptTemplate) => {
     setSelectedTemplate(template.id)
@@ -136,27 +186,14 @@ export default function GeneratorPage() {
     setUploading(true)
 
     try {
-      // Compress image before uploading to avoid 413 error
       const compressedFile = await compressImage(file, 1200, 0.7)
-
       const formData = new FormData()
       formData.append('file', compressedFile)
 
-      let response = await fetch('/api/extract-layout', {
+      const response = await authFetch('/api/extract-layout', {
         method: 'POST',
         body: formData,
-        credentials: 'include',
       })
-
-      // Handle 401 by refreshing session and retrying
-      if (response.status === 401) {
-        await getSupabase().auth.refreshSession()
-        response = await fetch('/api/extract-layout', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        })
-      }
 
       if (response.ok) {
         const { layout: extractedLayout } = await response.json()
@@ -180,10 +217,10 @@ export default function GeneratorPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to upload file',
+        description: error.message || 'Failed to upload file',
         variant: 'destructive',
       })
     } finally {
@@ -193,9 +230,7 @@ export default function GeneratorPage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg'],
-    },
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg'] },
     maxFiles: 1,
   })
 
@@ -209,8 +244,8 @@ export default function GeneratorPage() {
       return
     }
 
-    const total = newItem.quantity * newItem.price
-    addItem({ ...newItem, total })
+    const itemTotal = newItem.quantity * newItem.price
+    addItem({ ...newItem, total: itemTotal })
     setNewItem({ name: '', quantity: 1, price: 0 })
   }
 
@@ -230,52 +265,30 @@ export default function GeneratorPage() {
 
     setGenerating(true)
 
-    const requestBody = JSON.stringify({
-      layout,
-      businessInfo: {
-        ...businessInfo,
-        logoUrl: logoUrl || undefined,
-      },
-      items,
-      subtotal,
-      tax,
-      total,
-      receiptNumber,
-      notes,
-      signatureUrl,
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-      },
-    })
-
     try {
-      let response = await fetch('/api/generate', {
+      const response = await authFetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: requestBody,
+        body: JSON.stringify({
+          layout,
+          businessInfo: { ...businessInfo, logoUrl: logoUrl || undefined },
+          items,
+          subtotal,
+          tax,
+          total,
+          receiptNumber,
+          notes,
+          signatureUrl,
+          colors: { primary: primaryColor, secondary: secondaryColor },
+        }),
       })
 
-      // Handle 401 by refreshing session and retrying
-      if (response.status === 401) {
-        await getSupabase().auth.refreshSession()
-        response = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: requestBody,
-        })
-      }
-
       if (response.ok) {
-        const { pdfUrl, pngUrl, remainingCredits } = await response.json()
+        const { pdfUrl, remainingCredits } = await response.json()
         toast({
           title: 'Receipt generated',
           description: `Your receipt is ready! ${remainingCredits} credits remaining`,
         })
-
-        // Open PDF in new tab
         window.open(pdfUrl, '_blank')
       } else {
         const { error } = await response.json()
@@ -285,15 +298,30 @@ export default function GeneratorPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to generate receipt',
+        description: error.message || 'Failed to generate receipt',
         variant: 'destructive',
       })
     } finally {
       setGenerating(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   return (
@@ -306,11 +334,7 @@ export default function GeneratorPage() {
               <ArrowLeft className="h-5 w-5" />
               <span className="font-medium">Back to Dashboard</span>
             </Link>
-            <Button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="gap-2"
-            >
+            <Button onClick={handleGenerate} disabled={generating} className="gap-2">
               {generating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -330,7 +354,7 @@ export default function GeneratorPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Panel - Input Form */}
+          {/* Left Panel */}
           <div className="space-y-6">
             {/* Template Selection */}
             <Card>
@@ -344,43 +368,24 @@ export default function GeneratorPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                  {receiptTemplates.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => handleTemplateSelect(template)}
-                      className={`relative p-4 rounded-lg border-2 transition-all hover:shadow-md ${
-                        selectedTemplate === template.id
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      {selectedTemplate === template.id && (
-                        <div className="absolute top-2 right-2">
-                          <Check className="h-4 w-4 text-blue-600" />
-                        </div>
-                      )}
-                      <div className="text-2xl mb-2">{template.preview}</div>
-                      <div className="text-sm font-medium">{template.name}</div>
-                      <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                        {template.description}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <TemplateGrid
+                  templates={receiptTemplates}
+                  selectedId={selectedTemplate}
+                  onSelect={handleTemplateSelect}
+                />
 
-                <div className="relative">
+                <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-200" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">or upload your own</span>
+                    <span className="px-2 bg-gray-50 text-gray-500">or upload your own</span>
                   </div>
                 </div>
 
                 <div
                   {...getRootProps()}
-                  className={`mt-4 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                     isDragActive
                       ? 'border-blue-600 bg-blue-50'
                       : 'border-gray-300 hover:border-blue-400'
@@ -390,8 +395,6 @@ export default function GeneratorPage() {
                   <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                   {uploading ? (
                     <p className="text-gray-600 text-sm">Analyzing layout...</p>
-                  ) : isDragActive ? (
-                    <p className="text-blue-600 text-sm">Drop the file here</p>
                   ) : (
                     <p className="text-gray-600 text-sm">
                       Drag & drop a receipt image to extract its layout
@@ -429,9 +432,7 @@ export default function GeneratorPage() {
                       <Input
                         id="businessAddress"
                         value={businessInfo.address}
-                        onChange={(e) =>
-                          setBusinessInfo({ address: e.target.value })
-                        }
+                        onChange={(e) => setBusinessInfo({ address: e.target.value })}
                         placeholder="123 Main St, City, State 12345"
                       />
                     </div>
@@ -467,22 +468,14 @@ export default function GeneratorPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-4">
                       {items.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 p-3 border rounded-lg"
-                        >
+                        <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
                           <div className="flex-1">
                             <p className="font-medium">{item.name}</p>
                             <p className="text-sm text-gray-600">
-                              {item.quantity} × ${item.price.toFixed(2)} = $
-                              {item.total.toFixed(2)}
+                              {item.quantity} × ${item.price.toFixed(2)} = ${item.total.toFixed(2)}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => removeItem(index)}>
                             <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>
                         </div>
@@ -495,9 +488,7 @@ export default function GeneratorPage() {
                         <Input
                           id="itemName"
                           value={newItem.name}
-                          onChange={(e) =>
-                            setNewItem({ ...newItem, name: e.target.value })
-                          }
+                          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
                           placeholder="Product name"
                         />
                       </div>
@@ -509,12 +500,7 @@ export default function GeneratorPage() {
                             type="number"
                             min="1"
                             value={newItem.quantity}
-                            onChange={(e) =>
-                              setNewItem({
-                                ...newItem,
-                                quantity: parseInt(e.target.value) || 1,
-                              })
-                            }
+                            onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
                           />
                         </div>
                         <div>
@@ -525,12 +511,7 @@ export default function GeneratorPage() {
                             min="0"
                             step="0.01"
                             value={newItem.price}
-                            onChange={(e) =>
-                              setNewItem({
-                                ...newItem,
-                                price: parseFloat(e.target.value) || 0,
-                              })
-                            }
+                            onChange={(e) => setNewItem({ ...newItem, price: parseFloat(e.target.value) || 0 })}
                           />
                         </div>
                       </div>
@@ -550,25 +531,16 @@ export default function GeneratorPage() {
                     <CardDescription>Add your logo, signature, and customize colors</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Logo Upload */}
                     <div>
                       <Label className="text-base font-medium mb-2 block">Company Logo</Label>
-                      <LogoUpload
-                        currentLogoUrl={logoUrl}
-                        onLogoChange={setLogoUrl}
-                      />
+                      <LogoUpload currentLogoUrl={logoUrl} onLogoChange={setLogoUrl} />
                     </div>
 
-                    {/* Signature Upload */}
                     <div>
                       <Label className="text-base font-medium mb-2 block">Signature</Label>
-                      <SignatureUpload
-                        currentSignatureUrl={signatureUrl}
-                        onSignatureChange={setSignatureUrl}
-                      />
+                      <SignatureUpload currentSignatureUrl={signatureUrl} onSignatureChange={setSignatureUrl} />
                     </div>
 
-                    {/* Color Settings */}
                     <div className="space-y-4">
                       <Label className="text-base font-medium block">Colors</Label>
                       <div className="grid grid-cols-2 gap-4">
@@ -638,9 +610,7 @@ export default function GeneratorPage() {
                         max="100"
                         step="0.1"
                         value={taxRate}
-                        onChange={(e) =>
-                          setTaxRate(parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
                       />
                     </div>
                     <div>
@@ -652,9 +622,7 @@ export default function GeneratorPage() {
                         max="100"
                         step="0.1"
                         value={discount}
-                        onChange={(e) =>
-                          setDiscount(parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                       />
                     </div>
                     <div>
@@ -677,33 +645,21 @@ export default function GeneratorPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Live Preview</CardTitle>
-                <CardDescription>
-                  Your receipt will look like this
-                </CardDescription>
+                <CardDescription>Your receipt will look like this</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="bg-white border rounded-lg p-8 shadow-sm max-w-sm mx-auto" style={{ color: primaryColor }}>
                   {/* Header */}
                   <div className="text-center mb-6">
                     {logoUrl && (
-                      <img
-                        src={logoUrl}
-                        alt="Logo"
-                        className="h-16 object-contain mx-auto mb-3"
-                      />
+                      <img src={logoUrl} alt="Logo" className="h-16 object-contain mx-auto mb-3" />
                     )}
                     <h2 className="text-2xl font-bold mb-2" style={{ color: primaryColor }}>
                       {businessInfo.name || 'Business Name'}
                     </h2>
-                    <p className="text-sm text-gray-600">
-                      {businessInfo.address || 'Business Address'}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {businessInfo.phone || 'Phone Number'}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {businessInfo.email || 'Email Address'}
-                    </p>
+                    <p className="text-sm text-gray-600">{businessInfo.address || 'Business Address'}</p>
+                    <p className="text-sm text-gray-600">{businessInfo.phone || 'Phone Number'}</p>
+                    <p className="text-sm text-gray-600">{businessInfo.email || 'Email Address'}</p>
                   </div>
 
                   {/* Receipt Info */}
@@ -780,11 +736,7 @@ export default function GeneratorPage() {
                   )}
                   {signatureUrl && (
                     <div className="mt-4 flex justify-end">
-                      <img
-                        src={signatureUrl}
-                        alt="Signature"
-                        className="h-12 object-contain"
-                      />
+                      <img src={signatureUrl} alt="Signature" className="h-12 object-contain" />
                     </div>
                   )}
                   <div className="mt-6 text-center text-sm border-t pt-4" style={{ color: secondaryColor }}>
