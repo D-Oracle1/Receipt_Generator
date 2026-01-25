@@ -1,6 +1,4 @@
 import { ReceiptLayout } from '../ai/extractLayout'
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
 
 export interface BusinessInfo {
   name: string
@@ -232,12 +230,16 @@ function generateReceiptHTML(
 }
 
 async function getBrowser() {
+  // Dynamic imports for serverless environment
+  const puppeteer = await import('puppeteer-core')
+  const chromium = await import('@sparticuz/chromium')
+
   // For Vercel serverless environment
-  return puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
+  return puppeteer.default.launch({
+    args: chromium.default.args,
+    defaultViewport: chromium.default.defaultViewport,
+    executablePath: await chromium.default.executablePath(),
+    headless: chromium.default.headless,
   })
 }
 
