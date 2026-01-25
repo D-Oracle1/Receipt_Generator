@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { extractLayoutFromImage } from '@/lib/ai/extractLayout'
-import { createRouteHandlerClient } from '@/lib/supabase/server'
+import { createRouteHandlerClientWithResponse } from '@/lib/supabase/server'
 
 // Increase timeout for AI processing
 export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient(req)
+    const { supabase, applyResponseCookies } = createRouteHandlerClientWithResponse(req)
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.error('Auth error in extract-layout:', authError?.message || 'No user')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -59,10 +60,11 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       layout,
       sampleUrl: publicUrl,
     })
+    return applyResponseCookies(response)
   } catch (error) {
     console.error('Extract layout error:', error)
     return NextResponse.json(

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@/lib/supabase/server'
+import { createRouteHandlerClientWithResponse } from '@/lib/supabase/server'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient(req)
+    const { supabase, applyResponseCookies } = createRouteHandlerClientWithResponse(req)
     const {
       data: { user },
       error: authError,
@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({ receipts })
+    const response = NextResponse.json({ receipts })
+    return applyResponseCookies(response)
   } catch (error) {
     console.error('Get receipts error:', error)
     return NextResponse.json(
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient(req)
+    const { supabase, applyResponseCookies } = createRouteHandlerClientWithResponse(req)
     const {
       data: { user },
       error: authError,
@@ -73,7 +74,8 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true })
+    const response = NextResponse.json({ success: true })
+    return applyResponseCookies(response)
   } catch (error) {
     console.error('Delete receipt error:', error)
     return NextResponse.json(

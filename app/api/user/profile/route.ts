@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@/lib/supabase/server'
+import { createRouteHandlerClientWithResponse } from '@/lib/supabase/server'
 
 export async function PUT(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient(req)
+    const { supabase, applyResponseCookies } = createRouteHandlerClientWithResponse(req)
     const {
       data: { user },
       error: authError,
@@ -33,7 +33,8 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
 
-    return NextResponse.json({ user: data })
+    const response = NextResponse.json({ user: data })
+    return applyResponseCookies(response)
   } catch (error) {
     console.error('Profile update error:', error)
     return NextResponse.json(

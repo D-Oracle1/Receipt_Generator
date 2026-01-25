@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generatePDF, generatePNG } from '@/lib/pdf/generatePDF'
-import { createRouteHandlerClient } from '@/lib/supabase/server'
+import { createRouteHandlerClientWithResponse } from '@/lib/supabase/server'
 
-// Increase timeout for PDF generation with Puppeteer
+// Increase timeout for PDF generation
 export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient(req)
+    const { supabase, applyResponseCookies } = createRouteHandlerClientWithResponse(req)
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.error('Auth error in generate:', authError?.message || 'No user')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -123,12 +124,13 @@ export async function POST(req: NextRequest) {
       .update({ credits: userData.credits - 1 })
       .eq('id', user.id)
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       pdfUrl,
       pngUrl,
       receipt: receiptRecord,
       remainingCredits: userData.credits - 1,
     })
+    return applyResponseCookies(response)
   } catch (error) {
     console.error('Generate receipt error:', error)
     return NextResponse.json(

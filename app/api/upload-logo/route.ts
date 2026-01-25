@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@/lib/supabase/server'
+import { createRouteHandlerClientWithResponse } from '@/lib/supabase/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient(req)
+    const { supabase, applyResponseCookies } = createRouteHandlerClientWithResponse(req)
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.error('Auth error in upload-logo:', authError?.message || 'No user')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -73,10 +74,11 @@ export async function POST(req: NextRequest) {
       file_type: 'logo',
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       url: publicUrl,
       message: 'Logo uploaded successfully',
     })
+    return applyResponseCookies(response)
   } catch (error) {
     console.error('Logo upload error:', error)
     return NextResponse.json(

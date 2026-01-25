@@ -1,6 +1,6 @@
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { Database } from './client'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -34,20 +34,56 @@ export const createServerClient = () => {
 }
 
 // For API Route Handlers - reads cookies directly from the request
+// Returns both the client and a response helper for setting cookies
 export const createRouteHandlerClient = (request: NextRequest) => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error('Missing Supabase environment variables')
   }
 
-  return createSupabaseServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  // Store cookies that need to be set
+  const cookiesToSet: { name: string; value: string; options?: any }[] = []
+
+  const supabase = createSupabaseServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll() {
         return request.cookies.getAll()
       },
-      setAll(cookiesToSet) {
-        // In route handlers, we can't set cookies directly
-        // The middleware handles token refresh
+      setAll(cookies) {
+        // Collect cookies to be set on the response
+        cookiesToSet.push(...cookies)
       },
     },
   })
+
+  return supabase
+}
+
+// Create a Supabase client that can update cookies in the response
+export const createRouteHandlerClientWithResponse = (request: NextRequest) => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Missing Supabase environment variables')
+  }
+
+  const cookiesToSet: { name: string; value: string; options?: any }[] = []
+
+  const supabase = createSupabaseServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookies) {
+        cookiesToSet.push(...cookies)
+      },
+    },
+  })
+
+  // Helper to apply collected cookies to a response
+  const applyResponseCookies = (response: NextResponse) => {
+    cookiesToSet.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options)
+    })
+    return response
+  }
+
+  return { supabase, applyResponseCookies }
 }
