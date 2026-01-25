@@ -141,10 +141,11 @@ export default function GeneratorPage() {
           description: 'Your receipt layout has been analyzed successfully',
         })
       } else {
-        const { error } = await response.json()
+        const data = await response.json()
+        console.log('API Error Response:', data)
         toast({
           title: 'Error',
-          description: error || 'Failed to extract layout',
+          description: data.error || 'Failed to extract layout',
           variant: 'destructive',
         })
       }
