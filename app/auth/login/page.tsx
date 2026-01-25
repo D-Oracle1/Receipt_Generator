@@ -39,12 +39,31 @@ export default function LoginPage() {
           description: 'Please check your email to verify your account',
         })
       } else {
-        const { error } = await getSupabase().auth.signInWithPassword({
+        const { data, error } = await getSupabase().auth.signInWithPassword({
           email,
           password,
         })
 
         if (error) throw error
+
+        // Wait for session to be properly established
+        if (data.session) {
+          // Force a small delay to ensure cookies are set
+          await new Promise(resolve => setTimeout(resolve, 100))
+
+          // Verify the session is accessible
+          const { data: { user } } = await getSupabase().auth.getUser()
+          if (user) {
+            toast({
+              title: 'Signed in',
+              description: 'Welcome back!',
+            })
+
+            // Use window.location for a full page refresh to ensure cookies are applied
+            window.location.href = '/dashboard'
+            return
+          }
+        }
 
         toast({
           title: 'Signed in',

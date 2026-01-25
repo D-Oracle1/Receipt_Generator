@@ -6,6 +6,7 @@ import { Upload, X, PenTool, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 import Image from 'next/image'
+import { getSupabase } from '@/lib/supabase/client'
 
 interface SignatureUploadProps {
   currentSignatureUrl?: string | null
@@ -46,10 +47,21 @@ export function SignatureUpload({ currentSignatureUrl, onSignatureChange }: Sign
       formData.append('type', 'signature')
 
       try {
-        const response = await fetch('/api/upload-logo', {
+        let response = await fetch('/api/upload-logo', {
           method: 'POST',
           body: formData,
+          credentials: 'include',
         })
+
+        // Handle 401 by refreshing session and retrying
+        if (response.status === 401) {
+          await getSupabase().auth.refreshSession()
+          response = await fetch('/api/upload-logo', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          })
+        }
 
         if (response.ok) {
           const { url } = await response.json()

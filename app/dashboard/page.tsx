@@ -67,34 +67,77 @@ export default function DashboardPage() {
   }, [])
 
   async function loadUserData() {
-    const { data: { session } } = await getSupabase().auth.getSession()
-    if (!session) {
-      window.location.href = '/auth/login'
-      return
-    }
+    try {
+      // Use getUser() which validates the session with the server
+      const { data: { user: authUser }, error } = await getSupabase().auth.getUser()
+      if (error || !authUser) {
+        console.log('No authenticated user, redirecting to login')
+        window.location.href = '/auth/login'
+        return
+      }
 
-    const response = await fetch('/api/user')
-    if (response.ok) {
-      const { user } = await response.json()
-      setUser(user)
+      const response = await fetch('/api/user', {
+        credentials: 'include', // Ensure cookies are sent
+      })
+      if (response.ok) {
+        const { user } = await response.json()
+        setUser(user)
+      } else if (response.status === 401) {
+        // Session might be stale, try refreshing
+        const { error: refreshError } = await getSupabase().auth.refreshSession()
+        if (refreshError) {
+          window.location.href = '/auth/login'
+          return
+        }
+        // Retry the request
+        const retryResponse = await fetch('/api/user', { credentials: 'include' })
+        if (retryResponse.ok) {
+          const { user } = await retryResponse.json()
+          setUser(user)
+        }
+      }
+    } catch (err) {
+      console.error('Error loading user data:', err)
     }
     setLoading(false)
   }
 
   async function loadReceipts() {
-    const response = await fetch('/api/receipts')
-    if (response.ok) {
-      const { receipts } = await response.json()
-      setReceipts(receipts)
+    try {
+      const response = await fetch('/api/receipts', { credentials: 'include' })
+      if (response.ok) {
+        const { receipts } = await response.json()
+        setReceipts(receipts)
+      } else if (response.status === 401) {
+        // Try refreshing the session
+        await getSupabase().auth.refreshSession()
+        const retryResponse = await fetch('/api/receipts', { credentials: 'include' })
+        if (retryResponse.ok) {
+          const { receipts } = await retryResponse.json()
+          setReceipts(receipts)
+        }
+      }
+    } catch (err) {
+      console.error('Error loading receipts:', err)
     }
   }
 
   async function deleteReceipt(id: string) {
     if (!confirm('Are you sure you want to delete this receipt?')) return
 
-    const response = await fetch(`/api/receipts?id=${id}`, {
+    let response = await fetch(`/api/receipts?id=${id}`, {
       method: 'DELETE',
+      credentials: 'include',
     })
+
+    // Handle 401 by refreshing session and retrying
+    if (response.status === 401) {
+      await getSupabase().auth.refreshSession()
+      response = await fetch(`/api/receipts?id=${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+    }
 
     if (response.ok) {
       toast({

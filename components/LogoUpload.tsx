@@ -6,6 +6,7 @@ import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 import Image from 'next/image'
+import { getSupabase } from '@/lib/supabase/client'
 
 interface LogoUploadProps {
   currentLogoUrl?: string | null
@@ -46,10 +47,21 @@ export function LogoUpload({ currentLogoUrl, onLogoChange }: LogoUploadProps) {
       formData.append('type', 'logo')
 
       try {
-        const response = await fetch('/api/upload-logo', {
+        let response = await fetch('/api/upload-logo', {
           method: 'POST',
           body: formData,
+          credentials: 'include',
         })
+
+        // Handle 401 by refreshing session and retrying
+        if (response.status === 401) {
+          await getSupabase().auth.refreshSession()
+          response = await fetch('/api/upload-logo', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          })
+        }
 
         if (response.ok) {
           const { url } = await response.json()

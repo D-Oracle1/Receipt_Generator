@@ -13,6 +13,7 @@ import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2, Palette } from 'luc
 import { useDropzone } from 'react-dropzone'
 import { LogoUpload } from '@/components/LogoUpload'
 import { SignatureUpload } from '@/components/SignatureUpload'
+import { getSupabase } from '@/lib/supabase/client'
 
 // Compress image to reduce file size for upload
 async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
@@ -116,10 +117,21 @@ export default function GeneratorPage() {
       const formData = new FormData()
       formData.append('file', compressedFile)
 
-      const response = await fetch('/api/extract-layout', {
+      let response = await fetch('/api/extract-layout', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       })
+
+      // Handle 401 by refreshing session and retrying
+      if (response.status === 401) {
+        await getSupabase().auth.refreshSession()
+        response = await fetch('/api/extract-layout', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        })
+      }
 
       if (response.ok) {
         const { layout: extractedLayout } = await response.json()
@@ -186,29 +198,43 @@ export default function GeneratorPage() {
 
     setGenerating(true)
 
+    const requestBody = JSON.stringify({
+      layout,
+      businessInfo: {
+        ...businessInfo,
+        logoUrl: logoUrl || undefined,
+      },
+      items,
+      subtotal,
+      tax,
+      total,
+      receiptNumber,
+      notes,
+      signatureUrl,
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+      },
+    })
+
     try {
-      const response = await fetch('/api/generate', {
+      let response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          layout,
-          businessInfo: {
-            ...businessInfo,
-            logoUrl: logoUrl || undefined,
-          },
-          items,
-          subtotal,
-          tax,
-          total,
-          receiptNumber,
-          notes,
-          signatureUrl,
-          colors: {
-            primary: primaryColor,
-            secondary: secondaryColor,
-          },
-        }),
+        credentials: 'include',
+        body: requestBody,
       })
+
+      // Handle 401 by refreshing session and retrying
+      if (response.status === 401) {
+        await getSupabase().auth.refreshSession()
+        response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: requestBody,
+        })
+      }
 
       if (response.ok) {
         const { pdfUrl, pngUrl, remainingCredits } = await response.json()
