@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generatePDF, generatePNG } from '@/lib/pdf/generatePDF'
 import { createRouteHandlerClient } from '@/lib/supabase/server'
 
+// Increase timeout for PDF generation with Puppeteer
+export const maxDuration = 60
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = createRouteHandlerClient(req)
