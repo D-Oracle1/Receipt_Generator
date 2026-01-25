@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const { toast } = useToast()
+  const router = useRouter()
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault()
@@ -26,7 +28,7 @@ export default function LoginPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
 
@@ -49,7 +51,8 @@ export default function LoginPage() {
           description: 'Welcome back!',
         })
 
-        window.location.href = '/dashboard'
+        router.refresh()
+        router.push('/dashboard')
       }
     } catch (error: any) {
       toast({
@@ -66,7 +69,7 @@ export default function LoginPage() {
     const { error } = await getSupabase().auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
 
