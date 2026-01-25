@@ -9,11 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useReceiptStore } from '@/lib/store/useReceiptStore'
 import { useToast } from '@/components/ui/use-toast'
-import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2, Palette } from 'lucide-react'
+import { Upload, Plus, Trash2, Download, ArrowLeft, Loader2, LayoutTemplate, Check } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { LogoUpload } from '@/components/LogoUpload'
 import { SignatureUpload } from '@/components/SignatureUpload'
 import { getSupabase } from '@/lib/supabase/client'
+import { receiptTemplates, ReceiptTemplate } from '@/lib/templates/receiptTemplates'
 
 // Compress image to reduce file size for upload
 async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
@@ -97,12 +98,36 @@ export default function GeneratorPage() {
   const [primaryColor, setPrimaryColor] = useState('#000000')
   const [secondaryColor, setSecondaryColor] = useState('#666666')
   const [currentDate, setCurrentDate] = useState('')
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('classic')
   const { toast } = useToast()
 
   // Set date on client to avoid hydration mismatch
   useEffect(() => {
     setCurrentDate(new Date().toLocaleDateString())
   }, [])
+
+  // Set default template on mount
+  useEffect(() => {
+    const template = receiptTemplates.find(t => t.id === 'classic')
+    if (template && !layout) {
+      setLayout(template.layout)
+    }
+  }, [])
+
+  const handleTemplateSelect = (template: ReceiptTemplate) => {
+    setSelectedTemplate(template.id)
+    setLayout(template.layout)
+    if (template.layout.colors?.primary) {
+      setPrimaryColor(template.layout.colors.primary)
+    }
+    if (template.layout.colors?.secondary) {
+      setSecondaryColor(template.layout.colors.secondary)
+    }
+    toast({
+      title: 'Template applied',
+      description: `${template.name} template has been applied`,
+    })
+  }
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -136,6 +161,13 @@ export default function GeneratorPage() {
       if (response.ok) {
         const { layout: extractedLayout } = await response.json()
         setLayout(extractedLayout)
+        setSelectedTemplate('custom')
+        if (extractedLayout.colors?.primary) {
+          setPrimaryColor(extractedLayout.colors.primary)
+        }
+        if (extractedLayout.colors?.secondary) {
+          setSecondaryColor(extractedLayout.colors.secondary)
+        }
         toast({
           title: 'Layout extracted',
           description: 'Your receipt layout has been analyzed successfully',
@@ -300,37 +332,70 @@ export default function GeneratorPage() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left Panel - Input Form */}
           <div className="space-y-6">
+            {/* Template Selection */}
             <Card>
               <CardHeader>
-                <CardTitle>Upload Sample Receipt</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutTemplate className="h-5 w-5" />
+                  Choose a Template
+                </CardTitle>
                 <CardDescription>
-                  Upload a sample receipt to extract its layout
+                  Select a pre-built template or upload a sample receipt
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  {receiptTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => handleTemplateSelect(template)}
+                      className={`relative p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                        selectedTemplate === template.id
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {selectedTemplate === template.id && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="h-4 w-4 text-blue-600" />
+                        </div>
+                      )}
+                      <div className="text-2xl mb-2">{template.preview}</div>
+                      <div className="text-sm font-medium">{template.name}</div>
+                      <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                        {template.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">or upload your own</span>
+                  </div>
+                </div>
+
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  className={`mt-4 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                     isDragActive
                       ? 'border-blue-600 bg-blue-50'
                       : 'border-gray-300 hover:border-blue-400'
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                   {uploading ? (
-                    <p className="text-gray-600">Analyzing layout...</p>
+                    <p className="text-gray-600 text-sm">Analyzing layout...</p>
                   ) : isDragActive ? (
-                    <p className="text-blue-600">Drop the file here</p>
+                    <p className="text-blue-600 text-sm">Drop the file here</p>
                   ) : (
-                    <>
-                      <p className="text-gray-600 mb-2">
-                        Drag & drop a receipt image, or click to select
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        PNG, JPG up to 10MB
-                      </p>
-                    </>
+                    <p className="text-gray-600 text-sm">
+                      Drag & drop a receipt image to extract its layout
+                    </p>
                   )}
                 </div>
               </CardContent>

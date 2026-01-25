@@ -109,7 +109,15 @@ export async function extractLayoutFromImage(
   imageBase64: string
 ): Promise<ReceiptLayout> {
   try {
+    // Check if API key is configured
+    if (!process.env.GOOGLE_AI_API_KEY) {
+      console.error('GOOGLE_AI_API_KEY is not configured')
+      return getDefaultLayout()
+    }
+
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+    console.log('Sending request to Gemini API...')
 
     const result = await model.generateContent([
       {
@@ -124,8 +132,11 @@ export async function extractLayoutFromImage(
     const response = await result.response
     const textContent = response.text()
 
+    console.log('Gemini response received, length:', textContent?.length || 0)
+
     if (!textContent) {
-      throw new Error('No text response from Gemini')
+      console.error('No text response from Gemini')
+      return getDefaultLayout()
     }
 
     // Extract JSON from response (handle potential markdown code blocks)
@@ -134,13 +145,21 @@ export async function extractLayoutFromImage(
       jsonText = jsonText.replace(/```json?\n?/g, '').replace(/```\n?$/g, '')
     }
 
+    // Try to find JSON object in the response
+    const jsonMatch = jsonText.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      jsonText = jsonMatch[0]
+    }
+
     const layout: ReceiptLayout = JSON.parse(jsonText)
 
     // Validate the structure
     if (!layout.page || !layout.header || !layout.table || !layout.totals || !layout.footer) {
-      throw new Error('Invalid layout structure returned')
+      console.error('Invalid layout structure returned:', Object.keys(layout))
+      return getDefaultLayout()
     }
 
+    console.log('Layout extracted successfully')
     return layout
   } catch (error) {
     console.error('Error extracting layout:', error)

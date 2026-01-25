@@ -32,7 +32,14 @@
       "Bash(dir /s /b \"d:\\\\Websites\\\\Receipt\\\\Receipt_Generator\\\\app\")",
       "Bash(dir:*)",
       "Bash(npm install:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git status:*)",
+      "Bash(npm i:*)",
+      "Bash(npm --version:*)",
+      "Bash(node --version:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []
